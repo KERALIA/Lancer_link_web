@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Explicitly opt into Turbopack for production builds.
+  // This prevents Vercel's Webpack-based modifyConfig overlay from running
+  // and crashing with "path argument must be of type string. Received undefined".
+  turbopack: {},
+
+  // Tell Node.js bundler not to bundle these server-only packages.
+  serverExternalPackages: ["undici"],
+
   async headers() {
     return [
       {
