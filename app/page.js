@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ContactForm from "@/components/ContactForm";
 import NavBar from "@/components/NavBar";
+import { redirect } from "next/navigation";
 
 /* ── SVG Icon Components ── */
 function WebAppIcon() {
@@ -82,7 +83,13 @@ const portfolioItems = [
   { title: "E-commerce Client Portal", locked: false },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage({ searchParams }) {
+  const params = await searchParams;
+  const code = params?.code;
+
+  if (code) {
+    redirect(`/auth/callback?code=${code}`);
+  }
   return (
     <main className="min-h-screen">
       {/* ══════ Navigation ══════ */}
