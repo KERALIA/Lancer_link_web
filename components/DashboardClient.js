@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import StatusBadge from "@/components/StatusBadge";
 import ProgressBar from "@/components/ProgressBar";
@@ -9,6 +9,9 @@ import GlowCard from "@/components/GlowCard";
 import SetupRequiredCard from "@/components/SetupRequiredCard";
 import DashboardError from "@/components/DashboardError";
 import UnauthorizedBanner from "@/components/UnauthorizedBanner";
+import MetricStrip from "@/components/ui/MetricStrip";
+import ProjectCard from "@/components/ui/ProjectCard";
+import Toast from "@/components/Toast";
 import { formatMoney } from "@/lib/format-currency";
 
 function InvoiceIcon() {
@@ -122,6 +125,28 @@ export default function DashboardClient({
 }) {
   const router = useRouter();
   const [downloading, setDownloading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [fileCount, setFileCount] = useState(undefined);
+
+  useEffect(() => {
+    const email = project?.clientEmail || userEmail;
+    if (!email) return;
+    async function loadFiles() {
+      try {
+        const res = await fetch(
+          `/api/files?email=${encodeURIComponent(email)}`,
+          { cache: "no-store" },
+        );
+        if (res.ok) {
+          const body = await res.json();
+          setFileCount((body.files || []).length);
+        }
+      } catch {
+        setFileCount(0);
+      }
+    }
+    void loadFiles();
+  }, [project?.clientEmail, userEmail]);
 
   if (setupRequired) {
     return (
@@ -155,7 +180,7 @@ export default function DashboardClient({
         `/api/invoices/download?email=${encodeURIComponent(email)}`
       );
       if (!res.ok) {
-        console.error("Invoice download failed:", res.status);
+        setToast({ type: "error", message: "Invoice download failed." });
         return;
       }
       const blob = await res.blob();
@@ -169,8 +194,10 @@ export default function DashboardClient({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      setToast({ type: "success", message: "Invoice downloaded ✓" });
     } catch (err) {
       console.error("Invoice download error:", err);
+      setToast({ type: "error", message: "Invoice download failed." });
     } finally {
       setDownloading(false);
     }
@@ -180,18 +207,83 @@ export default function DashboardClient({
     router.push("/dashboard/messages");
   };
 
+  const invoiceDue =
+    project.invoice.status === "Pending"
+      ? formatMoney(project.invoice.amount, project.invoice.currency)
+      : "$0";
+
+  const metrics = [
+    {
+      label: "Active projects",
+      value: "1",
+      delta: "Your active workspace",
+      deltaTone: "neutral",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Invoices due",
+      value: invoiceDue,
+      delta:
+        project.invoice.status === "Pending" ? "1 pending" : "All paid",
+      deltaTone:
+        project.invoice.status === "Pending" ? "warning" : "positive",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M9 14l2 2 4-4M7 3h10a2 2 0 012 2v16l-3-2-3 2-3-2-3 2V5a2 2 0 00-2-2z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Shared files",
+      value: fileCount !== undefined ? String(fileCount) : "—",
+      delta: fileCount !== undefined ? `${fileCount} available` : "Loading…",
+      deltaTone: "neutral",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+        </svg>
+      ),
+    },
+    {
+      label: "Avg. completion",
+      value: `${project.progress}%`,
+      delta: `Status: ${project.status}`,
+      deltaTone: "positive",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12 20V10M18 20V4M6 20v-4" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <div className="animate-fade-in">
+      {toast && (
+        <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
+      )}
       {showUnauthorized && <UnauthorizedBanner />}
-      <div className="mb-8">
-        <h1
-          className="font-sora font-bold text-2xl md:text-3xl mb-1 text-text-primary"
-        >
-          Project Dashboard
-        </h1>
-        <p className="text-sm text-text-muted">
+      <div className="mb-6">
+        <h1 className="text-page-title">Overview</h1>
+        <p className="text-body mt-1">
           Track your project progress, invoices, and shared resources.
         </p>
+      </div>
+
+      <MetricStrip metrics={metrics} />
+
+      <div className="mb-6">
+        <ProjectCard
+          name={project.name}
+          progress={project.progress}
+          deliveryDate={project.deliveryDate !== "—" ? project.deliveryDate : undefined}
+          fileCount={fileCount}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-6">

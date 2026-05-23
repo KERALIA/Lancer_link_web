@@ -204,8 +204,7 @@ export default function AddClientForm({ onSuccess, onError }) {
     }
   };
 
-  const inputClasses =
-    "bg-background border border-border rounded-xl px-4 py-3 text-text-primary w-full text-sm transition focus:border-primary placeholder:text-text-muted";
+  const inputClasses = "input-field";
 
   if (setupRequired) {
     return <SetupRequiredCard />;
@@ -385,8 +384,8 @@ export default function AddClientForm({ onSuccess, onError }) {
             Invoice Amount{" "}
             <span className="text-text-muted text-xs">(optional)</span>
           </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-sm">
+          <div className="input-group">
+            <span className="input-group-prefix">
               {getCurrencySymbol(form.invoiceCurrency)}
             </span>
             <input
@@ -398,7 +397,7 @@ export default function AddClientForm({ onSuccess, onError }) {
               onChange={(e) => set("invoiceAmount", e.target.value)}
               onBlur={validateInvoiceAmountBlur}
               placeholder="0.00"
-              className={`${inputClasses} pl-8`}
+              className="input-group-field"
             />
           </div>
           {errors.invoice_amount && (
@@ -412,32 +411,36 @@ export default function AddClientForm({ onSuccess, onError }) {
         <label htmlFor="add-status" className="block text-sm text-text-secondary mb-1">
           Invoice Status
         </label>
-        <div className="relative">
-          <span
-            className={`absolute left-4 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ${
-              form.invoiceStatus === "Paid" ? "bg-success" : "bg-warning"
-            }`}
-          />
-          <select
-            id="add-status"
-            value={form.invoiceStatus}
-            onChange={(e) => set("invoiceStatus", e.target.value)}
-            className={`${inputClasses} pl-9 appearance-none cursor-pointer`}
-          >
-            <option value="Pending">Pending</option>
-            <option value="Paid">Paid</option>
-          </select>
-          <svg
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
+        <div className="input-group">
+          <span className="input-group-prefix">
+            <span
+              className={`w-2 h-2 rounded-full inline-block ${
+                form.invoiceStatus === "Paid" ? "bg-success" : "bg-warning"
+              }`}
+            />
+          </span>
+          <div className="input-group-select-wrap">
+            <select
+              id="add-status"
+              value={form.invoiceStatus}
+              onChange={(e) => set("invoiceStatus", e.target.value)}
+              className="input-group-field appearance-none cursor-pointer"
+            >
+              <option value="Pending">Pending</option>
+              <option value="Paid">Paid</option>
+            </select>
+            <svg
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
         </div>
       </div>
 

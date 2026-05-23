@@ -1,34 +1,19 @@
-import SkeletonCard from "@/components/SkeletonCard";
-
 export default function DashboardSkeleton() {
   return (
     <div>
       <div className="mb-8">
-        <div
-          className="h-8 w-48 rounded-lg animate-pulse-skeleton mb-2"
-          style={{ background: "rgba(42,42,46,0.3)" }}
-        />
-        <div
-          className="h-4 w-72 rounded animate-pulse-skeleton"
-          style={{ background: "rgba(42,42,46,0.2)" }}
-        />
+        <div className="skeleton h-7 w-48 mb-2" />
+        <div className="skeleton h-4 w-72" />
       </div>
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 md:col-span-6 xl:col-span-4">
-          <SkeletonCard />
-        </div>
-        <div className="col-span-12 md:col-span-6 xl:col-span-4">
-          <SkeletonCard variant="wide" />
-        </div>
-        <div className="col-span-12 md:col-span-6 xl:col-span-4">
-          <SkeletonCard />
-        </div>
-        <div className="col-span-12 md:col-span-6 xl:col-span-5">
-          <SkeletonCard variant="small" />
-        </div>
-        <div className="col-span-12 md:col-span-6 xl:col-span-7">
-          <SkeletonCard variant="small" />
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="skeleton h-[88px] w-full rounded-md" />
+        ))}
+      </div>
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="skeleton h-24 w-full rounded-lg" />
+        ))}
       </div>
     </div>
   );

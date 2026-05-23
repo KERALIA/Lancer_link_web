@@ -1,21 +1,26 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 export default function CursorTrail() {
+  const pathname = usePathname();
   const circlesRef = useRef([]);
   const mouse = useRef({ x: 0, y: 0 });
   const circles = useRef(Array.from({ length: 12 }, () => ({ x: 0, y: 0 })));
 
   const colors = [
-    "#7c3aed",
-    "#6d28d9",
-    "#5b21b6",
-    "#4c1d95",
-    "#3b0764",
+    "var(--color-brand)",
+    "#4338ca",
+    "#3730a3",
+    "#312e81",
+    "#1e1b4b",
   ];
 
+  const disabled = pathname?.startsWith("/dashboard");
+
   useEffect(() => {
+    if (disabled) return;
     // Hide horizontal overflow on the body to prevent scrolling issues
     document.body.style.overflowX = "hidden";
 
@@ -59,7 +64,11 @@ export default function CursorTrail() {
       cancelAnimationFrame(animationFrameId);
       document.body.style.overflowX = "auto";
     };
-  }, []);
+  }, [disabled]);
+
+  if (disabled) {
+    return null;
+  }
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[9999]">

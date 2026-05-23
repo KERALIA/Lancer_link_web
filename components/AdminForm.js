@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, startTransition } from "react";
 import SetupRequiredCard from "@/components/SetupRequiredCard";
+import ConfirmModal from "@/components/ConfirmModal";
 import { SUPABASE_NOT_CONFIGURED_ERROR } from "@/lib/supabase-constants";
 import { getCurrencySymbol } from "@/lib/format-currency";
 
@@ -25,10 +26,17 @@ const emptyForm = {
  * @param {object} props
  * @param {() => void} [props.onSuccess]
  * @param {(message: string) => void} [props.onError]
+ * @param {(message: string) => void} [props.onDeleteSuccess]
  * @param {string} props.userEmail
  * @param {string} [props.selectedEmail] — optional pre-selected client email
  */
-export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail }) {
+export default function AdminForm({
+  onSuccess,
+  onError,
+  onDeleteSuccess,
+  userEmail,
+  selectedEmail,
+}) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -39,6 +47,14 @@ export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail
   const [projects, setProjects] = useState([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [activeEmail, setActiveEmail] = useState(selectedEmail || "");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (selectedEmail) {
+      setActiveEmail(selectedEmail);
+    }
+  }, [selectedEmail]);
 
   const set = useCallback((field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -299,14 +315,50 @@ export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail
     }
   };
 
-  const inputClasses =
-    "bg-background border border-border rounded-xl px-4 py-3 text-text-primary w-full text-sm transition focus:border-primary placeholder:text-text-muted";
+  const handleDelete = async () => {
+    if (!activeEmail || deleting) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(
+        `/api/projects/delete?email=${encodeURIComponent(activeEmail)}`,
+        { method: "DELETE" },
+      );
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        onError?.(body.error || "Failed to delete project");
+        return;
+      }
+
+      const deleted = activeEmail;
+      setShowDeleteConfirm(false);
+      setActiveEmail("");
+      setForm(emptyForm);
+      onDeleteSuccess?.(deleted);
+    } catch (err) {
+      console.error("[AdminForm] delete:", err);
+      onError?.("Network error while deleting project");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const inputClasses = "input-field";
 
   if (loadErrorKind === "setup") {
     return <SetupRequiredCard />;
   }
 
   return (
+    <>
+      {showDeleteConfirm && (
+        <ConfirmModal
+          message={`Permanently delete the project for ${activeEmail}? This removes all files, messages, invoice data, and revokes their login access. This cannot be undone.`}
+          confirmLabel={deleting ? "Deleting…" : "Delete project"}
+          onConfirm={handleDelete}
+          onCancel={() => !deleting && setShowDeleteConfirm(false)}
+        />
+      )}
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Project Selector */}
       <div>
@@ -438,7 +490,7 @@ export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail
           {/* Progress */}
           <div>
             <label className="block text-sm text-text-secondary mb-1">Progress Percentage</label>
-            <p className="text-4xl font-bold font-sora gradient-text mb-3">{form.progress}%</p>
+            <p className="text-page-title mb-3">{form.progress}%</p>
             <div className="flex items-center gap-4">
               <input
                 type="range"
@@ -500,8 +552,8 @@ export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail
               <label htmlFor="admin-amount" className="block text-sm text-text-secondary mb-1">
                 Invoice Amount
               </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted text-sm">
+              <div className="input-group">
+                <span className="input-group-prefix">
                   {getCurrencySymbol(form.invoiceCurrency)}
                 </span>
                 <input
@@ -512,7 +564,7 @@ export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail
                   value={form.invoiceAmount}
                   onChange={(e) => set("invoiceAmount", e.target.value)}
                   onBlur={validateInvoiceAmountBlur}
-                  className={`${inputClasses} pl-8`}
+                  className="input-group-field"
                 />
               </div>
               {errors.invoice_amount && (
@@ -526,32 +578,36 @@ export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail
             <label htmlFor="admin-status" className="block text-sm text-text-secondary mb-1">
               Invoice Status
             </label>
-            <div className="relative">
-              <span
-                className={`absolute left-4 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ${
-                  form.invoiceStatus === "Paid" ? "bg-success" : "bg-warning"
-                }`}
-              />
-              <select
-                id="admin-status"
-                value={form.invoiceStatus}
-                onChange={(e) => set("invoiceStatus", e.target.value)}
-                className={`${inputClasses} pl-9 appearance-none cursor-pointer`}
-              >
-                <option value="Pending">Pending</option>
-                <option value="Paid">Paid</option>
-              </select>
-              <svg
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
+            <div className="input-group">
+              <span className="input-group-prefix">
+                <span
+                  className={`w-2 h-2 rounded-full inline-block ${
+                    form.invoiceStatus === "Paid" ? "bg-success" : "bg-warning"
+                  }`}
+                />
+              </span>
+              <div className="input-group-select-wrap">
+                <select
+                  id="admin-status"
+                  value={form.invoiceStatus}
+                  onChange={(e) => set("invoiceStatus", e.target.value)}
+                  className="input-group-field appearance-none cursor-pointer"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Paid">Paid</option>
+                </select>
+                <svg
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
             </div>
             {errors.invoice_status && (
               <p className="text-error text-xs mt-1">{errors.invoice_status}</p>
@@ -599,7 +655,7 @@ export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail
           <button
             type="submit"
             disabled={submitting}
-            className="bg-primary hover:bg-primary-hover text-white font-medium py-3 px-6 rounded-xl w-full transition disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+            className="btn-primary w-full disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting && (
               <svg
@@ -615,8 +671,39 @@ export default function AdminForm({ onSuccess, onError, userEmail, selectedEmail
             )}
             {submitting ? "Saving…" : "Save Changes"}
           </button>
+
+          <div
+            className="mt-8 pt-6 border-t"
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            <p
+              className="text-sm font-medium mb-1"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              Danger zone
+            </p>
+            <p
+              className="text-xs mb-4"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Permanently remove this client&apos;s project and login access.
+            </p>
+            <button
+              type="button"
+              disabled={deleting || submitting}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-4 h-9 rounded-md text-sm font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: "var(--color-danger-soft)",
+                color: "var(--color-danger-text)",
+              }}
+            >
+              Delete project
+            </button>
+          </div>
         </>
       )}
     </form>
+    </>
   );
 }

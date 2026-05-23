@@ -69,10 +69,7 @@ export async function POST(request) {
 
   if (!project) {
     return NextResponse.json(
-      {
-        error:
-          "This email is not registered. Ask your freelancer to add you in the admin panel first.",
-      },
+      { error: "This email is not registered.", notRegistered: true },
       { status: 403 },
     );
   }

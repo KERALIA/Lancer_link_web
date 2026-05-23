@@ -1,70 +1,66 @@
+@import "../styles/tokens.css";
 @import "tailwindcss";
 
-/* ── Design Tokens — Dark Mode (default) ── */
+/* ── Legacy bridge (Tailwind + existing components) ── */
 :root,
 [data-theme="dark"] {
-  --background: #0b0b0f;
-  --surface: #18181b;
-  --surface-hover: #1f1f23;
-  --border: #27272a;
-  --border-light: #3f3f46;
-  --primary: #7c3aed;
-  --primary-hover: #6d28d9;
-  --primary-light: #8b5cf6;
-  --accent: #a78bfa;
-  --success: #22c55e;
-  --success-muted: rgba(34, 197, 94, 0.15);
-  --warning: #f59e0b;
-  --warning-muted: rgba(245, 158, 11, 0.15);
-  --error: #ef4444;
-  --error-muted: rgba(239, 68, 68, 0.15);
-  --info: #3b82f6;
-  --info-muted: rgba(59, 130, 246, 0.15);
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --foreground: #fafafa;
-  /* Toggle track colors */
-  --toggle-track-bg: #3f3f46;
-  --toggle-thumb-bg: #a78bfa;
-  --toggle-icon-color: #fafafa;
-  /* Glow / shadow RGB values for dynamic use */
-  --primary-rgb: 124, 58, 237;
-  --card-bg-raw: 24, 24, 27;
-  --drop-zone-bg-raw: 24, 24, 27;
+  --background: var(--color-bg-primary);
+  --surface: var(--color-bg-secondary);
+  --surface-hover: var(--color-bg-tertiary);
+  --border: var(--color-border);
+  --border-light: var(--color-bg-tertiary);
+  --primary: var(--color-brand);
+  --primary-hover: #4338ca;
+  --primary-light: var(--color-brand-text);
+  --accent: var(--color-brand-text);
+  --success: var(--color-success);
+  --success-muted: var(--color-success-soft);
+  --warning: var(--color-warning);
+  --warning-muted: var(--color-warning-soft);
+  --error: var(--color-danger);
+  --error-muted: var(--color-danger-soft);
+  --info: var(--color-brand);
+  --info-muted: var(--color-brand-soft);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-tertiary);
+  --foreground: var(--color-text-primary);
+  --toggle-track-bg: var(--color-bg-tertiary);
+  --toggle-thumb-bg: var(--color-brand);
+  --toggle-icon-color: var(--color-text-primary);
+  --primary-rgb: 79, 70, 229;
+  --card-bg-raw: 31, 41, 55;
+  --drop-zone-bg-raw: 31, 41, 55;
 }
 
-/* ── Design Tokens — Light Mode ── */
 [data-theme="light"] {
-  --background: #f8fafc;
-  --surface: #ffffff;
-  --surface-hover: #f1f5f9;
-  --border: #e2e8f0;
-  --border-light: #cbd5e1;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #3b82f6;
-  --accent: #2563eb;
-  --success: #16a34a;
-  --success-muted: rgba(22, 163, 74, 0.12);
-  --warning: #d97706;
-  --warning-muted: rgba(217, 119, 6, 0.12);
-  --error: #dc2626;
-  --error-muted: rgba(220, 38, 38, 0.12);
-  --info: #2563eb;
-  --info-muted: rgba(37, 99, 235, 0.12);
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --foreground: #0f172a;
-  /* Toggle track colors */
-  --toggle-track-bg: #bfdbfe;
-  --toggle-thumb-bg: #2563eb;
-  --toggle-icon-color: #0f172a;
-  /* Glow / shadow RGB values for dynamic use */
-  --primary-rgb: 37, 99, 235;
+  --background: var(--color-bg-primary);
+  --surface: var(--color-bg-secondary);
+  --surface-hover: var(--color-bg-tertiary);
+  --border: var(--color-border);
+  --border-light: var(--color-bg-tertiary);
+  --primary: var(--color-brand);
+  --primary-hover: #4338ca;
+  --primary-light: var(--color-brand);
+  --accent: var(--color-brand);
+  --success: var(--color-success);
+  --success-muted: var(--color-success-soft);
+  --warning: var(--color-warning);
+  --warning-muted: var(--color-warning-soft);
+  --error: var(--color-danger);
+  --error-muted: var(--color-danger-soft);
+  --info: var(--color-brand);
+  --info-muted: var(--color-brand-soft);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-tertiary);
+  --foreground: var(--color-text-primary);
+  --toggle-track-bg: var(--color-brand-soft);
+  --toggle-thumb-bg: var(--color-brand);
+  --toggle-icon-color: var(--color-text-primary);
+  --primary-rgb: 79, 70, 229;
   --card-bg-raw: 255, 255, 255;
-  --drop-zone-bg-raw: 248, 250, 252;
+  --drop-zone-bg-raw: 249, 250, 251;
 }
 
 @theme inline {
@@ -642,4 +638,254 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 [data-theme="light"] .theme-icon-sun {
   opacity: 1;
   transform: scale(1) rotate(0deg);
+}
+
+/* ── Typography scale (Section 5) ── */
+.text-page-title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+.text-section-heading {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+.text-body {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.text-ui-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.text-caption {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+}
+
+.text-table-header {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+/* ── Skeleton shimmer (Section 8) ── */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 25%,
+    var(--color-border) 50%,
+    var(--color-bg-tertiary) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes toast-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-toast-slide-up {
+  animation: toast-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-toast-slide-down {
+  animation: toast-slide-down 0.3s ease-in forwards;
+}
+
+/* ── Form controls (Section 6) ── */
+.input-field {
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-primary);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  padding: 0 12px;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.input-field::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.input-field--error {
+  border-color: var(--color-danger);
+}
+
+.btn-primary {
+  background: var(--color-brand);
+  color: #fff;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-bg-secondary);
+}
+
+.btn-destructive {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-destructive:hover:not(:disabled) {
+  background: #fca5a5;
+}
+
+/* ── Input Group (prefix addon pattern) ── */
+/*
+  Wraps an optional left-addon (symbol, dot, icon) and the actual input/select
+  in a flex row. The addon and field share the same border/background so they
+  look like one cohesive control, but are completely separate DOM nodes —
+  no absolute positioning, no padding tricks, zero overlap possible.
+*/
+.input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-primary);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-group:focus-within {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+/* Left addon cell — symbol, dot, icon etc. */
+.input-group-prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
+  white-space: nowrap;
+  user-select: none;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease;
+}
+
+/* The actual input / select inside the group — no border of its own */
+.input-group-field {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  padding: 0 12px;
+  box-shadow: none !important;
+}
+
+.input-group-field::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* Wrapper for select + chevron inside an input-group */
+.input-group-select-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+}
+
+.input-group-select-wrap .input-group-field {
+  width: 100%;
+  padding-right: 32px; /* room for the chevron */
 }

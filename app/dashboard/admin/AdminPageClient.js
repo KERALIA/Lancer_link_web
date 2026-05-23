@@ -2,9 +2,13 @@
 
 import { useState, useEffect, useMemo, startTransition, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import AdminForm from "@/components/AdminForm";
 import AddClientForm from "@/components/AddClientForm";
 import Toast from "@/components/Toast";
+import MetricStrip from "@/components/ui/MetricStrip";
+import ProjectCard from "@/components/ui/ProjectCard";
+import EmptyState from "@/components/ui/EmptyState";
 import { formatMoney } from "@/lib/format-currency";
 
 /* ─── Helpers ─── */
@@ -49,172 +53,11 @@ function groupProjectsByClient(projects) {
   return Array.from(groups.values()).sort((a, b) => a.email.localeCompare(b.email));
 }
 
-/* ─── Sub-components ─── */
-
-function StatCard({ label, value, sub, color, icon }) {
+function FoldersIcon() {
   return (
-    <div
-      className="glass-card p-5 flex flex-col gap-3 group transition-all duration-300 hover:-translate-y-1"
-      style={{ "--card-accent": color }}
-    >
-      <div className="flex items-center justify-between">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300"
-          style={{ background: `${color}18`, color }}
-        >
-          {icon}
-        </div>
-        {sub && (
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: `${color}15`, color }}>
-            {sub}
-          </span>
-        )}
-      </div>
-      <div>
-        <p className="text-2xl font-bold font-sora text-text-primary">{value}</p>
-        <p className="text-xs text-text-muted mt-0.5 uppercase tracking-wider">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-function ClientCard({ project, onEdit }) {
-  const progress = project.progress_percent ?? 0;
-  const isPaid = project.invoice_status === "Paid";
-  const isComplete = progress >= 100;
-  const currency = project.invoice_currency === "INR" ? "INR" : "USD";
-  const deliveryDays = daysUntil(project.delivery_date);
-  const isOverdue = deliveryDays !== null && deliveryDays < 0;
-  const isUrgent = deliveryDays !== null && deliveryDays >= 0 && deliveryDays <= 7;
-
-  return (
-    <div
-      className="group glass-card p-5 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-      style={{
-        borderColor: isOverdue ? "rgba(239,68,68,0.3)" : undefined,
-      }}
-      onClick={() => onEdit(project)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onEdit(project)}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0"
-            style={{ background: "rgba(124,58,237,0.18)", color: "#a78bfa" }}
-          >
-            {clientInitials(project.client_email)}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text-primary truncate">
-              {project.project_name || "Untitled Project"}
-            </p>
-            <p className="text-xs text-text-muted truncate">{project.client_email}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {isOverdue && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444" }}>
-              Overdue
-            </span>
-          )}
-          {!isOverdue && isUrgent && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>
-              {deliveryDays}d left
-            </span>
-          )}
-          <span
-            className="text-xs px-2 py-0.5 rounded-full font-medium"
-            style={
-              isPaid
-                ? { background: "rgba(34,197,94,0.15)", color: "#22c55e" }
-                : { background: "rgba(245,158,11,0.15)", color: "#f59e0b" }
-            }
-          >
-            {isPaid ? "Paid" : "Pending"}
-          </span>
-        </div>
-      </div>
-
-      {/* Progress */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs text-text-muted">Progress</span>
-          <span
-            className="text-xs font-bold"
-            style={{ color: isComplete ? "#22c55e" : "#a78bfa" }}
-          >
-            {progress}%
-          </span>
-        </div>
-        <div
-          className="w-full h-1.5 rounded-full"
-          style={{ background: "var(--border)" }}
-        >
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{
-              width: `${progress}%`,
-              background: isComplete
-                ? "linear-gradient(90deg, #22c55e, #4ade80)"
-                : "linear-gradient(90deg, var(--primary), var(--accent))",
-              boxShadow: `0 0 8px ${isComplete ? "rgba(34,197,94,0.4)" : "rgba(var(--primary-rgb),0.4)"}`,
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-3 border-t border-border">
-        <span className="text-sm font-semibold text-accent">
-          {formatMoney(project.invoice_amount, currency)}
-        </span>
-        <div className="flex items-center gap-1.5">
-          {project.delivery_date && (
-            <span className="text-xs text-text-muted">
-              Due {formatDate(project.delivery_date)}
-            </span>
-          )}
-          <svg
-            className="w-4 h-4 text-text-muted group-hover:text-accent transition-colors"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EmptyState({ onAddClient }) {
-  return (
-    <div className="glass-card p-16 text-center animate-fade-in-up">
-      <div
-        className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5"
-        style={{ background: "rgba(124,58,237,0.1)" }}
-      >
-        <svg className="w-10 h-10" style={{ color: "#7c3aed" }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-        </svg>
-      </div>
-      <h3 className="font-sora font-bold text-xl text-text-primary mb-2">No clients yet</h3>
-      <p className="text-text-muted text-sm mb-6 max-w-xs mx-auto">
-        Add your first client to get started. They'll be able to log in and track their project.
-      </p>
-      <button
-        type="button"
-        onClick={onAddClient}
-        className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-medium py-2.5 px-5 rounded-xl text-sm transition cursor-pointer"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        Add First Client
-      </button>
-    </div>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
   );
 }
 
@@ -225,6 +68,7 @@ function EmptyState({ onAddClient }) {
  * @param {string} props.userEmail
  */
 export default function AdminPageClient({ userEmail }) {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [toast, setToast] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -252,6 +96,13 @@ export default function AdminPageClient({ userEmail }) {
   useEffect(() => {
     startTransition(() => { void loadProjects(); });
   }, [loadProjects]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "add" || tab === "update" || tab === "clients" || tab === "overview") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const handleProjectEdit = (project) => {
     setSelectedEmail(project.client_email);
@@ -285,6 +136,73 @@ export default function AdminPageClient({ userEmail }) {
   const clientGroups = useMemo(() => groupProjectsByClient(filteredProjects), [filteredProjects]);
 
   // Recently updated (last 5)
+  const pendingInvoiceTotal = pendingProjects.reduce(
+    (s, p) => s + Number(p.invoice_amount ?? 0),
+    0,
+  );
+
+  const newThisMonth = clientProjects.filter((p) => {
+    if (!p.created_at) return false;
+    const created = new Date(p.created_at);
+    const now = new Date();
+    return (
+      created.getMonth() === now.getMonth() &&
+      created.getFullYear() === now.getFullYear()
+    );
+  }).length;
+
+  const adminMetrics = [
+    {
+      label: "Active projects",
+      value: projectsLoading ? "—" : String(clientProjects.length),
+      delta: projectsLoading ? undefined : `↑ ${newThisMonth} new this month`,
+      deltaTone: newThisMonth > 0 ? "positive" : "neutral",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Invoices due",
+      value: projectsLoading ? "—" : formatMoney(pendingInvoiceTotal, "USD"),
+      delta:
+        overdueProjects.length > 0
+          ? `↑ ${overdueProjects.length} overdue`
+          : pendingProjects.length > 0
+            ? `${pendingProjects.length} pending`
+            : "All clear",
+      deltaTone: overdueProjects.length > 0 ? "warning" : "neutral",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M9 14l2 2 4-4M7 3h10a2 2 0 012 2v16l-3-2-3 2-3-2-3 2V5a2 2 0 00-2-2z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Shared files",
+      value: projectsLoading ? "—" : "—",
+      delta: "Per project in Files",
+      deltaTone: "neutral",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Avg. completion",
+      value: projectsLoading ? "—" : `${avgProgress}%`,
+      delta: paidProjects.length > 0 ? `${paidProjects.length} paid` : undefined,
+      deltaTone: "positive",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12 20V10M18 20V4M6 20v-4" />
+        </svg>
+      ),
+    },
+  ];
+
   const recentProjects = [...clientProjects]
     .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))
     .slice(0, 5);
@@ -323,10 +241,8 @@ export default function AdminPageClient({ userEmail }) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-sora font-bold text-2xl md:text-3xl text-text-primary mb-1">
-              Admin Dashboard
-            </h1>
-            <p className="text-text-muted text-sm">
+            <h1 className="text-page-title mb-1">Admin Dashboard</h1>
+            <p className="text-body">
               Manage clients, track projects, and monitor revenue.
             </p>
           </div>
@@ -342,36 +258,7 @@ export default function AdminPageClient({ userEmail }) {
           </button>
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <StatCard
-            label="Total Clients"
-            value={projectsLoading ? "—" : clientGroups.length}
-            icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>}
-            color="#a78bfa"
-            sub={clientProjects.length > 0 ? `${clientProjects.length} projects` : null}
-          />
-          <StatCard
-            label="Pending Invoices"
-            value={projectsLoading ? "—" : pendingProjects.length}
-            icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-            color="#f59e0b"
-            sub={paidProjects.length > 0 ? `${paidProjects.length} paid` : null}
-          />
-          <StatCard
-            label="Avg Progress"
-            value={projectsLoading ? "—" : `${avgProgress}%`}
-            icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>}
-            color="#22c55e"
-            sub={overdueProjects.length > 0 ? `${overdueProjects.length} overdue` : null}
-          />
-          <StatCard
-            label="Total Revenue"
-            value={projectsLoading ? "—" : `$${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 0 })}`}
-            icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" /></svg>}
-            color="#3b82f6"
-          />
-        </div>
+        <MetricStrip metrics={adminMetrics} />
 
         {/* Tab Bar */}
         <div
@@ -411,19 +298,25 @@ export default function AdminPageClient({ userEmail }) {
         {activeTab === "overview" && (
           <div className="animate-fade-in">
             {projectsLoading ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="glass-card p-5 animate-pulse-skeleton h-40" />
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton h-24 w-full rounded-lg" />
                 ))}
               </div>
             ) : clientProjects.length === 0 ? (
-              <EmptyState onAddClient={() => setActiveTab("add")} />
+              <EmptyState
+                icon={<FoldersIcon />}
+                heading="No projects yet"
+                body="Once you add a client, their project will appear here."
+                ctaLabel="Add first client"
+                onCta={() => setActiveTab("add")}
+              />
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 {/* Left: Recent Activity */}
                 <div className="xl:col-span-2 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="font-sora font-semibold text-text-primary">Recent Projects</h2>
+                    <h2 className="text-section-heading">Recent Projects</h2>
                     <button
                       type="button"
                       onClick={() => setActiveTab("clients")}
@@ -619,13 +512,19 @@ export default function AdminPageClient({ userEmail }) {
             </div>
 
             {projectsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="glass-card p-5 animate-pulse-skeleton h-44" />
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton h-24 w-full rounded-lg" />
                 ))}
               </div>
             ) : clientProjects.length === 0 ? (
-              <EmptyState onAddClient={() => setActiveTab("add")} />
+              <EmptyState
+                icon={<FoldersIcon />}
+                heading="No projects yet"
+                body="Once you add a client, their project will appear here."
+                ctaLabel="Add first client"
+                onCta={() => setActiveTab("add")}
+              />
             ) : filteredProjects.length === 0 ? (
               <div className="glass-card p-10 text-center">
                 <p className="text-text-muted text-sm">No clients match your search.</p>
@@ -639,7 +538,12 @@ export default function AdminPageClient({ userEmail }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredProjects.map((p, i) => (
                     <div key={p.id || i} style={{ animationDelay: `${i * 0.04}s` }}>
-                      <ClientCard project={p} onEdit={handleProjectEdit} />
+                      <ProjectCard
+                        name={p.project_name || p.client_email}
+                        progress={p.progress_percent ?? 0}
+                        deliveryDate={p.delivery_date}
+                        onClick={() => handleProjectEdit(p)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -670,6 +574,11 @@ export default function AdminPageClient({ userEmail }) {
               selectedEmail={selectedEmail}
               onSuccess={() => {
                 showToast("success", "Project updated successfully ✓");
+                loadProjects();
+              }}
+              onDeleteSuccess={(email) => {
+                showToast("success", `Project for ${email} deleted permanently ✓`);
+                setSelectedEmail("");
                 loadProjects();
               }}
               onError={(msg) => showToast("error", msg || "Update failed. Please check your inputs.")}

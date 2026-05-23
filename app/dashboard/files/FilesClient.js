@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Toast from "@/components/Toast";
+import ConfirmModal from "@/components/ConfirmModal";
+import EmptyState from "@/components/ui/EmptyState";
 import ClientSelectorSidebar from "@/components/ClientSelectorSidebar";
 
 /* ── Helpers ── */
@@ -93,32 +95,6 @@ function SkeletonRow() {
         <div className="h-3 bg-border rounded w-1/5" />
       </div>
       <div className="h-8 w-20 bg-border rounded-lg" />
-    </div>
-  );
-}
-
-/* ── Confirm Modal ── */
-
-function ConfirmModal({ message, onConfirm, onCancel }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="glass-card p-6 max-w-sm w-full mx-4 animate-fade-in-up">
-        <p className="text-text-primary text-sm mb-6">{message}</p>
-        <div className="flex gap-3 justify-end">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm text-text-muted hover:text-text-primary hover:bg-surface-hover transition cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded-lg text-sm bg-error/90 text-white hover:bg-error transition cursor-pointer"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -422,27 +398,25 @@ export default function FilesClient({ userEmail, role }) {
       {activeEmail && (
         <>
           {loading ? (
-            <div className="glass-card divide-y divide-border overflow-hidden">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <SkeletonRow key={i} />
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="skeleton h-14 w-full rounded-md" />
               ))}
             </div>
           ) : files.length === 0 ? (
-            <div className="glass-card p-10 text-center max-w-2xl mx-auto animate-fade-in-up">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <EmptyState
+              icon={
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                 </svg>
-              </div>
-              <h3 className="font-sora font-semibold text-xl text-text-primary mb-2">
-                No files yet
-              </h3>
-              <p className="text-text-muted text-sm mb-2">
-                {isAdmin
+              }
+              heading="No files yet"
+              body={
+                isAdmin
                   ? "Upload a file using the drop zone above to share it with this client."
-                  : "Files shared with you by your freelancer will appear here."}
-              </p>
-            </div>
+                  : "Files shared with you by your freelancer will appear here."
+              }
+            />
           ) : (
             <div className="glass-card divide-y divide-border overflow-hidden">
               {files.map((file, idx) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "@/components/Sidebar";
+import DashboardTopNav from "@/components/DashboardTopNav";
 
 /**
  * @param {object} props
@@ -16,14 +16,10 @@ export default function DashboardShell({
   showAdminPanel = false,
 }) {
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar
-        userEmail={userEmail}
-        role={role}
-        showAdminPanel={showAdminPanel}
-      />
-      <main className="flex-1 lg:ml-64">
-        <div className="p-6 md:p-8 lg:p-10">{children}</div>
+    <div className="flex flex-col min-h-screen" style={{ background: "var(--color-bg-secondary)" }}>
+      <DashboardTopNav userEmail={userEmail} role={role} showAdminPanel={showAdminPanel} />
+      <main className="flex-1 w-full">
+        <div className="max-w-[1280px] mx-auto p-6 md:p-8">{children}</div>
       </main>
     </div>
   );
