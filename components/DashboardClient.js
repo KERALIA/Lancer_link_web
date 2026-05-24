@@ -286,7 +286,8 @@ export default function DashboardClient({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-6">
+      {/* sm:grid-cols-2 kicks in at 640px (tablet) so cards sit 2-per-row on tablet */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-6">
         <GlowCard className="xl:col-span-4" style={{ animationDelay: "0.05s" }}>
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -364,7 +365,7 @@ export default function DashboardClient({
 
           <p
             className="font-sora mb-1 text-text-primary"
-            style={{ fontSize: "32px", fontWeight: 700 }}
+            style={{ fontSize: "clamp(22px, 5vw, 32px)", fontWeight: 700 }}
           >
             {formatMoney(project.invoice.amount, project.invoice.currency)}
           </p>
@@ -479,7 +480,7 @@ export default function DashboardClient({
 
         <GlowCard
           className="xl:col-span-7 flex flex-col items-center justify-center text-center"
-          style={{ animationDelay: "0.25s" }}
+          style={{ animationDelay: "0.25s", minHeight: "clamp(180px, 30vw, 240px)" }}
         >
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mb-4"

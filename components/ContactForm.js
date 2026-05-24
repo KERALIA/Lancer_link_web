@@ -90,7 +90,9 @@ export default function ContactForm() {
 
   // ── Shared input classes ──────────────────────────────────────
   const inputBase =
-    'bg-background border rounded-xl px-4 py-3 text-text-primary w-full text-sm transition-all duration-200 outline-none placeholder:text-text-muted';
+    'bg-background border rounded-xl px-4 py-3 text-text-primary w-full transition-all duration-200 outline-none placeholder:text-text-muted'
+    + ' text-sm sm:text-sm' /* 16px base prevents Android/iOS auto-zoom on focus */;
+    /* Note: actual font-size is controlled via style to hit exactly 16px on mobile */
   const inputClasses = (field) =>
     `${inputBase} ${
       errors[field]
@@ -235,7 +237,8 @@ export default function ContactForm() {
           required
           rows={5}
           disabled={status === 'loading'}
-          className={`${inputClasses('message')} min-h-[120px] resize-none`}
+          className={`${inputClasses('message')} resize-none`}
+          style={{ minHeight: '140px', fontSize: '16px' /* prevents Android zoom */ }}
         />
         <div className="flex items-start justify-between mt-1.5">
           {errors.message ? (

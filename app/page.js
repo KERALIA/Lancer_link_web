@@ -96,19 +96,20 @@ export default async function LandingPage({ searchParams }) {
       <NavBar />
 
       {/* ══════ Hero Section ══════ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+      {/* hero-full-screen class uses 100dvh on mobile via globals.css to handle Android address bar */}
+      <section className="hero-full-screen relative min-h-screen flex items-center justify-center overflow-hidden pt-16 sm:pt-20">
         {/* Animated Grid Background */}
         <div className="absolute inset-0 animated-grid opacity-30" />
 
-        {/* Gradient Mesh Overlay */}
+        {/* Gradient Mesh Overlay — blobs use vw-based sizing so they don't cause horizontal scroll on mobile */}
         <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-float-1" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] animate-float-2" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] animate-float-3" />
+          <div className="absolute top-1/4 left-1/4 w-[40vw] max-w-[500px] h-[40vw] max-h-[500px] bg-primary/10 rounded-full blur-[120px] animate-float-1" />
+          <div className="absolute bottom-1/4 right-1/4 w-[35vw] max-w-[400px] h-[35vw] max-h-[400px] bg-accent/10 rounded-full blur-[100px] animate-float-2" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] max-w-[600px] h-[50vw] max-h-[600px] bg-primary/5 rounded-full blur-[140px] animate-float-3" />
         </div>
 
-        {/* Floating Geometric Shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Floating Geometric Shapes — hidden on mobile to reduce visual noise and prevent overflow */}
+        <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-[15%] left-[10%] w-16 h-16 border border-primary/20 rounded-xl rotate-12 animate-float-1" />
           <div className="absolute top-[25%] right-[15%] w-12 h-12 border border-accent/20 rounded-full animate-float-2" />
           <div className="absolute bottom-[30%] left-[20%] w-20 h-20 border border-primary/15 rounded-2xl -rotate-6 animate-float-3" />
@@ -272,8 +273,8 @@ export default async function LandingPage({ searchParams }) {
             </p>
           </div>
 
-          {/* Contact Form Card */}
-          <div className="glass-card p-8 md:p-10">
+          {/* Contact Form Card — tighter padding on mobile */}
+          <div className="glass-card p-5 sm:p-8 md:p-10">
             <ContactForm />
           </div>
         </div>

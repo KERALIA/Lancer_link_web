@@ -35,6 +35,23 @@ export const metadata = {
       "Track project progress, view invoices, and access shared assets.",
     type: "website",
   },
+  // PWA / mobile-ready meta
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "LancerLink",
+  },
+};
+
+// Viewport export — enables safe-area-inset and Android browser chrome color
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",          // for notch / Dynamic Island safe-area support
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#111827" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+  ],
 };
 
 /**

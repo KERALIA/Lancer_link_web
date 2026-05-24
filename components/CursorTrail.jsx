@@ -17,7 +17,13 @@ export default function CursorTrail() {
     "#1e1b4b",
   ];
 
-  const disabled = pathname?.startsWith("/dashboard");
+  // Disable on dashboard pages AND on touch/pointer-coarse devices (Android, tablets)
+  const isDashboard = pathname?.startsWith("/dashboard");
+  const isTouchDevice =
+    typeof window !== "undefined" &&
+    window.matchMedia("(pointer: coarse)").matches;
+
+  const disabled = isDashboard || isTouchDevice;
 
   useEffect(() => {
     if (disabled) return;

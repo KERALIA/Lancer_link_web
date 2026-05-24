@@ -72,6 +72,7 @@ export default function InvoiceTable({ rows, loading = false }) {
 
   return (
     <div>
+      {/* Filter pills */}
       <div className="flex gap-2 mb-4">
         {[
           { id: "all", label: "All" },
@@ -100,70 +101,172 @@ export default function InvoiceTable({ rows, loading = false }) {
         ))}
       </div>
 
-      <div
-        style={{
-          background: "var(--color-bg-primary)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-lg)",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          className="grid items-center"
-          style={{
-            gridTemplateColumns: "2fr 1fr 1fr 90px",
-            background: "var(--color-bg-secondary)",
-            borderBottom: "1px solid var(--color-border)",
-            padding: "8px 16px",
-          }}
-        >
-          <SortBtn col="invoice" label="Invoice" />
-          <SortBtn col="amount" label="Amount" />
-          <SortBtn col="date" label="Date" />
-          <SortBtn col="status" label="Status" />
-        </div>
+      {filtered.length === 0 ? (
+        <div className="py-8 text-center text-caption">No invoices match this filter.</div>
+      ) : (
+        <>
+          {/* ── MOBILE card layout (< sm / 640px) ── */}
+          <div
+            className="sm:hidden flex flex-col gap-3"
+          >
+            {filtered.map((row) => (
+              <div
+                key={row.id}
+                style={{
+                  background: "var(--color-bg-primary)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "14px 16px",
+                }}
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>
+                      {row.projectName}
+                    </p>
+                    <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>
+                      {row.invoiceId}
+                    </p>
+                  </div>
+                  <InvoiceStatusBadge status={row.status} />
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <p style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text-primary)" }}>
+                    {formatMoney(row.amount, row.currency)}
+                  </p>
+                  {row.date && (
+                    <p style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>
+                      {row.date}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
 
-        {filtered.length === 0 ? (
-          <div className="py-8 text-center text-caption">No invoices match this filter.</div>
-        ) : (
-          filtered.map((row, idx) => (
+          {/* ── TABLET layout (sm–md): 3-column table, hide Date column ── */}
+          <div
+            className="hidden sm:block md:hidden"
+            style={{
+              background: "var(--color-bg-primary)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-lg)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Tablet header */}
             <div
-              key={row.id}
-              className="grid items-center transition"
+              className="grid items-center"
               style={{
-                gridTemplateColumns: "2fr 1fr 1fr 90px",
-                padding: "12px 16px",
-                borderBottom:
-                  idx < filtered.length - 1 ? "1px solid var(--color-border)" : "none",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--color-bg-secondary)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
+                gridTemplateColumns: "2fr 1fr 90px",
+                background: "var(--color-bg-secondary)",
+                borderBottom: "1px solid var(--color-border)",
+                padding: "8px 16px",
               }}
             >
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>
-                  {row.projectName}
-                </p>
-                <p style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
-                  {row.invoiceId}
-                </p>
-              </div>
-              <p style={{ fontSize: 14, color: "var(--color-text-primary)" }}>
-                {formatMoney(row.amount, row.currency)}
-              </p>
-              <p style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
-                {row.date || "—"}
-              </p>
-              <div>
-                <InvoiceStatusBadge status={row.status} />
-              </div>
+              <SortBtn col="invoice" label="Invoice" />
+              <SortBtn col="amount" label="Amount" />
+              <SortBtn col="status" label="Status" />
             </div>
-          ))
-        )}
-      </div>
+            {filtered.map((row, idx) => (
+              <div
+                key={row.id}
+                className="grid items-center transition"
+                style={{
+                  gridTemplateColumns: "2fr 1fr 90px",
+                  padding: "12px 16px",
+                  borderBottom:
+                    idx < filtered.length - 1 ? "1px solid var(--color-border)" : "none",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--color-bg-secondary)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>
+                    {row.projectName}
+                  </p>
+                  <p style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
+                    {row.invoiceId} {row.date ? `· ${row.date}` : ""}
+                  </p>
+                </div>
+                <p style={{ fontSize: 14, color: "var(--color-text-primary)" }}>
+                  {formatMoney(row.amount, row.currency)}
+                </p>
+                <div>
+                  <InvoiceStatusBadge status={row.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── DESKTOP layout (md+): full 4-column table ── */}
+          <div
+            className="hidden md:block"
+            style={{
+              background: "var(--color-bg-primary)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "var(--radius-lg)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              className="grid items-center"
+              style={{
+                gridTemplateColumns: "2fr 1fr 1fr 90px",
+                background: "var(--color-bg-secondary)",
+                borderBottom: "1px solid var(--color-border)",
+                padding: "8px 16px",
+              }}
+            >
+              <SortBtn col="invoice" label="Invoice" />
+              <SortBtn col="amount" label="Amount" />
+              <SortBtn col="date" label="Date" />
+              <SortBtn col="status" label="Status" />
+            </div>
+
+            {filtered.map((row, idx) => (
+              <div
+                key={row.id}
+                className="grid items-center transition"
+                style={{
+                  gridTemplateColumns: "2fr 1fr 1fr 90px",
+                  padding: "12px 16px",
+                  borderBottom:
+                    idx < filtered.length - 1 ? "1px solid var(--color-border)" : "none",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--color-bg-secondary)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>
+                    {row.projectName}
+                  </p>
+                  <p style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
+                    {row.invoiceId}
+                  </p>
+                </div>
+                <p style={{ fontSize: 14, color: "var(--color-text-primary)" }}>
+                  {formatMoney(row.amount, row.currency)}
+                </p>
+                <p style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
+                  {row.date || "—"}
+                </p>
+                <div>
+                  <InvoiceStatusBadge status={row.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

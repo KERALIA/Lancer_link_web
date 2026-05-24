@@ -438,8 +438,8 @@ export default function AdminForm({
             )}
           </div>
 
-          {/* Date Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Date Fields — stacked on mobile, 3-col on md+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="admin-start-date" className="block text-sm text-text-secondary mb-1">
                 Start Date
@@ -519,8 +519,8 @@ export default function AdminForm({
             )}
           </div>
 
-          {/* Invoice Amount & Currency */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Invoice Amount & Currency — stacked on mobile, 2-col on sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="admin-currency" className="block text-sm text-text-secondary mb-1">
                 Currency

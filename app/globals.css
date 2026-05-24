@@ -128,6 +128,10 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter);
+  /* Android: prevent rubber-band overscroll */
+  overscroll-behavior: none;
+  /* Android: remove tap highlight flash */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ── Custom Scrollbar ── */
@@ -888,4 +892,164 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .input-group-select-wrap .input-group-field {
   width: 100%;
   padding-right: 32px; /* room for the chevron */
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Safe-Area Variables
+   ════════════════════════════════════════ */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Touch Targets (global)
+   All interactive elements must be at least 44px tall on touch screens
+   ════════════════════════════════════════ */
+@media (pointer: coarse) {
+  button,
+  a,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  select {
+    min-height: 44px;
+  }
+
+  /* Scrollbars are distracting / non-functional on touch — hide them */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  * {
+    scrollbar-width: none;
+  }
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Tablet (≤1024px)
+   ════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  /* Dashboard glow card grid: allow 2-col on tablet */
+  .dashboard-glow-card {
+    padding: 20px;
+  }
+
+  /* Metric strip: keep 2-col with adjusted padding */
+  .metric-strip-item {
+    padding: 12px 14px;
+  }
+
+  /* Admin panel sidebar collapses earlier on tablet */
+  .client-selector-sidebar {
+    width: 240px !important;
+    min-width: 240px !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Mobile (≤640px)
+   ════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* ── Hero: use dynamic viewport height so Android address bar doesn't clip */
+  .hero-full-screen {
+    min-height: 100dvh;
+  }
+
+  /* ── Dashboard glow cards: tighter padding on phone */
+  .dashboard-glow-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* ── Client group cards: full-width on mobile */
+  .client-group-card {
+    border-radius: 12px;
+  }
+
+  .client-group-header {
+    padding: 12px 16px;
+  }
+
+  /* ── Project list cards: tighter padding */
+  .project-list-card {
+    padding: 12px 16px;
+    border-radius: 10px;
+  }
+
+  /* ── Glass card: tighter border radius on small screens */
+  .glass-card {
+    border-radius: 12px;
+  }
+
+  /* ── File rows: compact */
+  .file-row {
+    padding: 10px 14px;
+    border-radius: 10px;
+  }
+
+  /* ── Drop zone: reduce height */
+  .drop-zone {
+    border-radius: 12px;
+  }
+
+  /* ── Chat input: safe bottom padding for Android nav bar */
+  .chat-input-container {
+    padding-bottom: var(--safe-bottom);
+    border-radius: 12px;
+  }
+
+  /* ── Typography scale tweaks for small screens */
+  .text-page-title {
+    font-size: 18px;
+  }
+
+  .text-section-heading {
+    font-size: 14px;
+  }
+
+  /* ── Form controls: ensure full width and taller touch targets */
+  .input-field {
+    height: 44px;
+    font-size: 16px; /* prevents iOS/Android auto-zoom on focus */
+    border-radius: var(--radius-md);
+  }
+
+  .btn-primary,
+  .btn-ghost,
+  .btn-destructive {
+    height: 44px;
+    font-size: 15px;
+  }
+
+  /* ── Admin sidebar: collapse to icon-only on very small screens */
+  .client-selector-sidebar {
+    width: 52px !important;
+    min-width: 52px !important;
+  }
+
+  /* ── Input group: stack prefix nicely */
+  .input-group {
+    border-radius: var(--radius-md);
+  }
+
+  .input-group-field {
+    height: 44px;
+    font-size: 16px; /* prevents zoom */
+  }
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — Very small phones (≤400px)
+   ════════════════════════════════════════ */
+@media (max-width: 400px) {
+  .dashboard-glow-card {
+    padding: 14px 12px;
+  }
+
+  .text-page-title {
+    font-size: 16px;
+  }
 }
