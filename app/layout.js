@@ -17,25 +17,83 @@ const inter = Inter({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+// ─── Metadata ───────────────────────────────────────────────────────────────
+// metadataBase resolves all relative image/canonical URLs to the production
+// domain. Update this URL before deploying to a custom domain.
 export const metadata = {
-  title: "LancerLink — Freelancer Client Portal",
+  metadataBase: new URL("https://lancerlink.vercel.app"),
+
+  // Title template: sub-pages get "<Page Title> | LancerLink" automatically
+  title: {
+    default: "LancerLink | Elite Freelancer & Client Management Portal",
+    template: "%s | LancerLink",
+  },
+
   description:
-    "A private workspace where clients track project progress, view invoices, and access shared assets in real time.",
+    "Streamline your freelance operations end-to-end. LancerLink bridges independent developers and premium clients with seamless invoicing workflows, milestone tracking, contract-secure file sharing, and real-time project collaboration — all from one unified portal.",
+
   keywords: [
-    "freelancer",
-    "client portal",
-    "project management",
-    "invoicing",
-    "dashboard",
+    "freelancer portal",
+    "client management software",
+    "secure contract tracking",
+    "developer invoicing tool",
+    "freelance milestone tracking",
+    "client collaboration dashboard",
+    "invoice automation",
+    "remote team management",
+    "project delivery portal",
+    "freelancer onboarding platform",
   ],
-  authors: [{ name: "LancerLink" }],
+
+  // Canonical self-reference for the root layout
+  alternates: {
+    canonical: "/",
+  },
+
+  // ── OpenGraph ──────────────────────────────────────────────────────────────
   openGraph: {
-    title: "LancerLink — Freelancer Client Portal",
+    title: "LancerLink | Elite Freelancer & Client Management Portal",
     description:
-      "Track project progress, view invoices, and access shared assets.",
+      "Streamline your freelance operations, invoices, and milestones in one unified dashboard built for elite independent professionals.",
+    url: "https://lancerlink.vercel.app",
+    siteName: "LancerLink",
+    images: [
+      {
+        url: "/images/og-main-cover.png",
+        width: 1200,
+        height: 630,
+        alt: "LancerLink Platform — Dashboard Preview showing metrics, invoices and project progress",
+        type: "image/png",
+      },
+    ],
+    locale: "en_US",
     type: "website",
   },
-  // PWA / mobile-ready meta
+
+  // ── Twitter / X Card ──────────────────────────────────────────────────────
+  twitter: {
+    card: "summary_large_image",
+    title: "LancerLink | Elite Freelancer & Client Portal",
+    description:
+      "The ultimate interface connecting remote engineers and designers directly to businesses — invoicing, milestones, and secure collaboration in one place.",
+    images: ["/images/og-main-cover.png"],
+    creator: "@lancerlink",
+  },
+
+  // ── Robot directives — public pages indexable by default ──────────────────
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+
+  // ── PWA / mobile-ready meta ───────────────────────────────────────────────
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -43,26 +101,19 @@ export const metadata = {
   },
 };
 
-// Viewport export — enables safe-area-inset and Android browser chrome color
+// ─── Viewport ─────────────────────────────────────────────────────────────────
+// Exported separately per Next.js 14+ App Router convention.
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover",          // for notch / Dynamic Island safe-area support
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#111827" },
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
   ],
 };
 
-/**
- * Anti-flash theme initialization script.
- *
- * This runs SYNCHRONOUSLY before the browser paints anything, so there
- * is zero flash of the wrong theme. Priority order:
- *   1. localStorage (user's saved preference)
- *   2. prefers-color-scheme (OS setting)
- *   3. Absolute fallback → 'dark'
- */
+// ─── Anti-flash theme script ──────────────────────────────────────────────────
 const themeInitScript = `
 (function () {
   try {
@@ -84,13 +135,8 @@ export default function RootLayout({ children }) {
       className={`${sora.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      {/*
-        suppressHydrationWarning on <html> is required because:
-        - The inline script sets data-theme on the server-rendered HTML
-        - React hydration won't warn about this attribute mismatch
-      */}
       <head>
-        {/* Blocking script — must be the very first thing in <head> */}
+        {/* Blocking script — must run before first paint to prevent theme flash */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-full flex flex-col font-inter bg-background text-text-primary">

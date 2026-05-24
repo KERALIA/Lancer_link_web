@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+// ─── SEO Note ─────────────────────────────────────────────────────────────────
+// Login page metadata is intentionally NOT exported here because this is a
+// "use client" component. Instead, a separate metadata file handles it.
+// See: app/login/layout.js (created alongside this file)
+
 const AUTH_ERRORS = {
   auth_failed: "Login link expired or invalid. Request a new link below.",
   missing_code: "Invalid login link. Request a new link below.",
@@ -70,7 +75,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="glass-card p-8 md:p-10">
           <div className="text-center mb-8">
-            <h1 className="text-page-title mb-2">LancerLink</h1>
+            {/*
+              This is a client-only auth page — intentionally NO <h1> that
+              would compete with the landing page. The login form is
+              a utility UI, not a content page.
+            */}
+            <p className="font-sora font-bold text-xl gradient-text mb-2" aria-label="LancerLink">
+              LancerLink
+            </p>
             <p className="text-text-muted text-sm">
               Sign in with a magic link sent to your email
             </p>
@@ -78,10 +90,11 @@ export default function LoginPage() {
 
           {/* ── Magic link sent ── */}
           {status === "success" && (
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-4" role="status" aria-live="polite" aria-label="Magic link sent successfully">
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
                 style={{ background: "rgba(34, 197, 94, 0.15)" }}
+                aria-hidden="true"
               >
                 <svg
                   className="w-7 h-7 text-success"
@@ -89,6 +102,7 @@ export default function LoginPage() {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={1.5}
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -111,6 +125,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={resetForm}
+                aria-label="Use a different email address to request a login link"
                 className="text-sm text-accent hover:underline cursor-pointer"
               >
                 Use a different email
@@ -120,11 +135,12 @@ export default function LoginPage() {
 
           {/* ── Email not registered ── */}
           {status === "not_registered" && (
-            <div className="text-center space-y-5">
+            <div className="text-center space-y-5" role="alert" aria-live="assertive">
               {/* Icon */}
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
                 style={{ background: "rgba(251, 191, 36, 0.12)" }}
+                aria-hidden="true"
               >
                 <svg
                   className="w-7 h-7"
@@ -133,6 +149,7 @@ export default function LoginPage() {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={1.5}
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -157,12 +174,13 @@ export default function LoginPage() {
               </div>
 
               {/* Divider */}
-              <div className="border-t border-border/50" />
+              <div className="border-t border-border/50" role="separator" />
 
               {/* CTAs */}
               <div className="flex flex-col gap-3">
                 <Link
                   href="/#contact"
+                  aria-label="Go to the LancerLink contact form to request portal access"
                   className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-medium transition-all duration-200 shadow-lg shadow-primary/20"
                 >
                   <svg
@@ -171,6 +189,7 @@ export default function LoginPage() {
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth={2}
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -184,6 +203,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={resetForm}
+                  aria-label="Try a different email address for login"
                   className="text-sm text-text-muted hover:text-text-secondary transition-colors cursor-pointer"
                 >
                   Try a different email
@@ -194,16 +214,16 @@ export default function LoginPage() {
 
           {/* ── Default form (idle / error / loading) ── */}
           {status !== "success" && status !== "not_registered" && (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               <div>
                 <label
-                  htmlFor="email"
+                  htmlFor="login-email"
                   className="block text-sm font-medium text-text-secondary mb-2"
                 >
                   Email address
                 </label>
                 <input
-                  id="email"
+                  id="login-email"
                   type="email"
                   autoComplete="email"
                   required
@@ -211,12 +231,14 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={status === "loading"}
                   placeholder="you@company.com"
+                  aria-describedby={error ? "login-error" : undefined}
                   className="input-field disabled:opacity-60"
+                  style={{ fontSize: "16px" /* prevent Android auto-zoom */ }}
                 />
               </div>
 
               {error && (
-                <p className="text-sm text-error" role="alert">
+                <p id="login-error" className="text-sm text-error" role="alert" aria-live="assertive">
                   {error}
                 </p>
               )}
@@ -224,6 +246,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={status === "loading" || !email.trim()}
+                aria-label={status === "loading" ? "Sending magic login link…" : "Send a magic login link to your email"}
                 className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {status === "loading" ? "Sending…" : "Send login link"}
