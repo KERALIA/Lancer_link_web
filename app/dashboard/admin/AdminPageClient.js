@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, startTransition, useCallback } from "react";
+import { useState, useEffect, startTransition, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import AdminForm from "@/components/AdminForm";
@@ -78,29 +78,31 @@ export default function AdminPageClient({ userEmail }) {
 
   const showToast = (type, message) => setToast({ type, message });
 
-  const loadProjects = useCallback(async () => {
+  const loadProjects = useCallback(async (signal) => {
     setProjectsLoading(true);
     try {
-      const res = await fetch("/api/projects/list", { cache: "no-store" });
+      const res = await fetch("/api/projects/list", { cache: "no-store", signal });
       if (res.ok) {
         const body = await res.json();
         setProjects(body.projects || []);
       }
     } catch (e) {
-      console.error("[AdminPageClient] loadProjects:", e);
+      if (e.name !== "AbortError") console.error("[AdminPageClient] loadProjects:", e);
     } finally {
       setProjectsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    startTransition(() => { void loadProjects(); });
+    const ac = new AbortController();
+    startTransition(() => { void loadProjects(ac.signal); });
+    return () => ac.abort();
   }, [loadProjects]);
 
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab === "add" || tab === "update" || tab === "clients" || tab === "overview") {
-      setActiveTab(tab);
+      startTransition(() => { setActiveTab(tab); });
     }
   }, [searchParams]);
 
@@ -133,7 +135,7 @@ export default function AdminPageClient({ userEmail }) {
       )
     : clientProjects;
 
-  const clientGroups = useMemo(() => groupProjectsByClient(filteredProjects), [filteredProjects]);
+  const clientGroups = groupProjectsByClient(filteredProjects);
 
   // Recently updated (last 5)
   const pendingInvoiceTotal = pendingProjects.reduce(

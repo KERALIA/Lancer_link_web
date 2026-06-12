@@ -93,11 +93,14 @@ export const metadata = {
     },
   },
 
+  // ── PWA manifest (served from app/manifest.json) ──────────────────────────
+  manifest: "/manifest.json",
+
   // ── PWA / mobile-ready meta ───────────────────────────────────────────────
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "LancerLink",
+    title: "Lancer Link",
   },
 };
 
@@ -116,15 +119,48 @@ export const viewport = {
 // ─── Anti-flash theme script ──────────────────────────────────────────────────
 const themeInitScript = `
 (function () {
+  var dd = document.documentElement;
+
+  // ── Theme init ─────────────────────────────────────────────────────────────
   try {
     var stored = localStorage.getItem('theme');
     if (stored === 'dark' || stored === 'light') {
-      document.documentElement.setAttribute('data-theme', stored);
-      return;
+      dd.setAttribute('data-theme', stored);
+    } else {
+      dd.setAttribute('data-theme',
+        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     }
-  } catch (e) {}
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  } catch (e) {
+    dd.setAttribute('data-theme',
+      window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  }
+
+  // ── Favicon sync — swap between dark SVG (auto-detected via prefers-color-scheme
+  //    inside icon0.svg) and light PNG based on the app's data-theme toggle ──
+  var link = document.querySelector("link[rel='icon']") || (function () {
+    var l = document.createElement("link");
+    l.rel = "icon";
+    document.head.appendChild(l);
+    return l;
+  })();
+
+  function syncFavicon() {
+    var theme = dd.getAttribute('data-theme');
+    if (theme === 'light') {
+      link.href = '/icon1.png';
+      link.type = 'image/png';
+    } else {
+      link.href = '/icon0.svg';
+      link.type = 'image/svg+xml';
+    }
+  }
+  syncFavicon();
+
+  new MutationObserver(function (mutations) {
+    for (var i = 0; i < mutations.length; i++) {
+      if (mutations[i].attributeName === 'data-theme') { syncFavicon(); break; }
+    }
+  }).observe(dd, { attributes: true });
 })();
 `.trim();
 

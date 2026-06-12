@@ -1,23 +1,28 @@
 {
-  "name": "clientdesk",
+  "name": "lancerlink",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev --webpack -p 3000",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start -p 3000",
+    "lint": "eslint",
+    "brave": "brave-browser http://localhost:3000"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.49.1",
+    "isomorphic-dompurify": "^3.16.0",
     "jspdf": "^4.2.1",
+    "motion": "^12.40.0",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "undici": "^8.3.0"
+    "undici": "^8.3.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.9",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",

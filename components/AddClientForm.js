@@ -230,8 +230,8 @@ export default function AddClientForm({ onSuccess, onError }) {
           <div>
             <p className="text-sm font-medium text-success">Client added successfully!</p>
             <p className="text-xs text-text-muted mt-0.5">
-              <span className="text-text-secondary">{successEmail}</span> can now log in
-              via the magic link on the login page.
+              <span className="text-text-secondary">{successEmail}</span> — invitation
+              email sent! They can set a password and sign in.
             </p>
           </div>
         </div>

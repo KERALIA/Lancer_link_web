@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useCallback, useEffect, useState } from 'react';
 
 /**
  * ThemeContext — exposes { theme, toggleTheme }
@@ -15,39 +15,35 @@ const ThemeContext = createContext({
  * ThemeProvider
  *
  * Priority order:
- *  1. localStorage (user's explicit choice)
- *  2. prefers-color-scheme OS setting
- *  3. Absolute fallback → 'dark'
+ *  1. DOM attribute (set by inline script in layout.js before React hydrates)
+ *  2. Absolute fallback → 'dark'
  *
- * The <html data-theme="..."> attribute is set by the inline script in layout.js
- * BEFORE React hydrates, preventing any flash of wrong theme.
- * This provider then syncs React state to that value.
+ * The <html data-theme="..."> attribute is set by an inline blocking script in
+ * layout.js BEFORE React hydrates, preventing any flash of wrong theme.
+ * This provider reads that value on mount and keeps React state in sync.
  */
 export function ThemeProvider({ children }) {
-  // Initialize to null so we know we haven't read from DOM yet
-  const [theme, setTheme] = useState(null);
+  const [theme, setTheme] = useState('dark');
 
-  // On mount: read the theme that the inline script already applied to <html>
+  // One-time sync from DOM on mount.
+  // useEffect only runs on the client, after hydration — no mismatch risk.
   useEffect(() => {
-    const applied = document.documentElement.getAttribute('data-theme') ?? 'dark';
-    setTheme(applied);
+    const domTheme = document.documentElement.getAttribute('data-theme');
+    if (domTheme && domTheme !== 'dark') {
+      setTheme(domTheme);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Functional updater form avoids stale closure over `theme`.
+  // DOM update happens inside the setter so it's always in sync with React state.
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch (_) {}
+      return next;
+    });
   }, []);
-
-  // Whenever theme changes, persist to localStorage and update <html>
-  useEffect(() => {
-    if (!theme) return;
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  // Don't render children until we've determined the theme to avoid mismatch
-  if (theme === null) {
-    return null;
-  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

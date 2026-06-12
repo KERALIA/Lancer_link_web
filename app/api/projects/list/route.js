@@ -40,22 +40,13 @@ export async function GET(request) {
     // If user is admin, they can see all projects
     // If user is client, they can only see their own project
     if (auth.role !== 'admin') {
-      // Get the user's email from profiles table
-      const { data: profile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('email')
-        .eq('id', auth.user.id)
-        .single();
-
-      if (profileError || !profile) {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      }
-
-      query = query.eq("client_email", profile.email);
+      // Use auth.user.email directly instead of extra profiles lookup (N+1 fix)
+      query = query.eq("client_email", auth.user.email);
     }
 
     const { data: projects, error } = await query
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      .limit(100);
 
     if (error) {
       console.error("[API /projects/list] Supabase error:", error);

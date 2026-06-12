@@ -59,51 +59,19 @@ export default function ProjectCard({
             }
           : undefined
       }
-      className="transition cursor-pointer"
-      style={{
-        background: "var(--color-bg-primary)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "var(--radius-lg)",
-        padding: 16,
-        boxShadow: "none",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-brand)";
-        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-border)";
-        e.currentTarget.style.boxShadow = "none";
-      }}
+      className="project-card"
     >
       <div className="flex items-center justify-between mb-3">
-        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>
-          {name || "Untitled Project"}
-        </span>
-        <span style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>{pct}%</span>
+        <span className="project-card-name">{name || "Untitled Project"}</span>
+        <span className="project-card-pct">{pct}%</span>
       </div>
-      <div
-        style={{
-          height: 6,
-          background: "var(--color-bg-tertiary)",
-          borderRadius: 3,
-          overflow: "hidden",
-        }}
-      >
+      <div className="project-card-track">
         <div
-          style={{
-            width: `${pct}%`,
-            height: "100%",
-            background: fillColor,
-            borderRadius: 3,
-            transition: "width 0.3s ease",
-          }}
+          className="project-card-fill"
+          style={{ width: `${pct}%`, background: fillColor }}
         />
       </div>
-      <div
-        className="flex flex-wrap items-center gap-3 mt-2.5"
-        style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}
-      >
+      <div className="project-card-meta">
         <span>📅 Due {formatShortDate(deliveryDate)}</span>
         <span>👤 {memberCount} member{memberCount !== 1 ? "s" : ""}</span>
         <span>📎 {fileCount !== undefined ? fileCount : "—"} files</span>

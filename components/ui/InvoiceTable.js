@@ -11,6 +11,23 @@ import { formatMoney } from "@/lib/format-currency";
 /**
  * @param {{ rows: InvoiceRow[], loading?: boolean }} props
  */
+/**
+ * Sort-button subcomponent (defined at module level per React Compiler rules).
+ */
+function SortBtn({ col, label, sortKey, sortDir, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(col)}
+      className="text-table-header cursor-pointer hover:opacity-80"
+      style={{ background: "none", border: "none", padding: 0 }}
+    >
+      {label}
+      {sortKey === col ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+    </button>
+  );
+}
+
 export default function InvoiceTable({ rows, loading = false }) {
   const [filter, setFilter] = useState("all");
   const [sortKey, setSortKey] = useState("date");
@@ -47,18 +64,6 @@ export default function InvoiceTable({ rows, loading = false }) {
       setSortDir("asc");
     }
   }
-
-  const SortBtn = ({ col, label }) => (
-    <button
-      type="button"
-      onClick={() => toggleSort(col)}
-      className="text-table-header cursor-pointer hover:opacity-80"
-      style={{ background: "none", border: "none", padding: 0 }}
-    >
-      {label}
-      {sortKey === col ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-    </button>
-  );
 
   if (loading) {
     return (
@@ -164,25 +169,19 @@ export default function InvoiceTable({ rows, loading = false }) {
                 padding: "8px 16px",
               }}
             >
-              <SortBtn col="invoice" label="Invoice" />
-              <SortBtn col="amount" label="Amount" />
-              <SortBtn col="status" label="Status" />
+              <SortBtn col="invoice" label="Invoice" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+              <SortBtn col="amount" label="Amount" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+              <SortBtn col="status" label="Status" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             </div>
             {filtered.map((row, idx) => (
               <div
                 key={row.id}
-                className="grid items-center transition"
+                className="group grid items-center transition hover:bg-[var(--color-bg-secondary)]"
                 style={{
                   gridTemplateColumns: "2fr 1fr 90px",
                   padding: "12px 16px",
                   borderBottom:
                     idx < filtered.length - 1 ? "1px solid var(--color-border)" : "none",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--color-bg-secondary)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
                 }}
               >
                 <div>
@@ -222,27 +221,21 @@ export default function InvoiceTable({ rows, loading = false }) {
                 padding: "8px 16px",
               }}
             >
-              <SortBtn col="invoice" label="Invoice" />
-              <SortBtn col="amount" label="Amount" />
-              <SortBtn col="date" label="Date" />
-              <SortBtn col="status" label="Status" />
+              <SortBtn col="invoice" label="Invoice" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+              <SortBtn col="amount" label="Amount" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+              <SortBtn col="date" label="Date" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+              <SortBtn col="status" label="Status" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
             </div>
 
             {filtered.map((row, idx) => (
               <div
                 key={row.id}
-                className="grid items-center transition"
+                className="group grid items-center transition hover:bg-[var(--color-bg-secondary)]"
                 style={{
                   gridTemplateColumns: "2fr 1fr 1fr 90px",
                   padding: "12px 16px",
                   borderBottom:
                     idx < filtered.length - 1 ? "1px solid var(--color-border)" : "none",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--color-bg-secondary)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
                 }}
               >
                 <div>

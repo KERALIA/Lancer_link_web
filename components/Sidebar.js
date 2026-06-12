@@ -139,11 +139,7 @@ export default function Sidebar({ userEmail, role, showAdminPanel = false }) {
               key={item.label}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 py-3 px-4 rounded-lg text-sm font-medium transition ${
-                isActive
-                  ? "bg-primary/10 text-primary-light border-l-2 border-primary"
-                  : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-              }`}
+              className={`sidebar-nav-link ${isActive ? "active" : ""}`}
             >
               {item.icon}
               {item.label}
@@ -154,7 +150,7 @@ export default function Sidebar({ userEmail, role, showAdminPanel = false }) {
 
       <div className="px-4 py-5 border-t border-border space-y-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-accent text-sm font-semibold shrink-0">
+          <div className="sidebar-user-avatar">
             {emailInitials(userEmail)}
           </div>
           <span className="text-sm text-text-muted truncate">{userEmail}</span>

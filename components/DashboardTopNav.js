@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, startTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -45,7 +45,7 @@ export default function DashboardTopNav({ userEmail, role }) {
 
   // Close mobile nav on route change
   useEffect(() => {
-    setMobileNavOpen(false);
+    startTransition(() => { setMobileNavOpen(false); });
   }, [pathname]);
 
   async function handleLogout() {

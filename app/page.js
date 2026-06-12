@@ -4,8 +4,6 @@ import NavBar from "@/components/NavBar";
 import { redirect } from "next/navigation";
 
 // ─── Page-level SEO Metadata ───────────────────────────────────────────────────
-// The root layout already supplies metadataBase + global defaults.
-// Here we narrow the canonical to "/" and make the description landing-specific.
 export const metadata = {
   title: "Elite Freelancer & Client Management Portal",
   description:
@@ -62,14 +60,6 @@ function UiUxIcon() {
   );
 }
 
-function LockIcon() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-    </svg>
-  );
-}
-
 function ArrowRightIcon() {
   return (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -110,8 +100,6 @@ const portfolioItems = [
 ];
 
 // ─── JSON-LD Schema — SoftwareApplication ────────────────────────────────────
-// Serialized once server-side; enables AI engines (ChatGPT, Perplexity, Gemini)
-// to understand, cite, and correctly summarize LancerLink in AI Overviews.
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -187,6 +175,26 @@ const webSiteJsonLd = {
   },
 };
 
+// ─── Person Schema — enables Google Knowledge Panel for the creator ───────────
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Alex Mercer", // TODO: Replace with real name
+  jobTitle: "Lead Full-Stack Architect",
+  url: "https://lancerlink.vercel.app",
+  sameAs: [
+    "https://github.com/alexmercer", // TODO: Replace with real profiles
+    "https://linkedin.com/in/alexmercer",
+  ],
+  knowsAbout: [
+    "Software Architecture",
+    "Next.js & React",
+    "PostgreSQL",
+    "Supabase",
+    "Cloud Infrastructure",
+  ],
+};
+
 export default async function LandingPage({ searchParams }) {
   const params = await searchParams;
   const code = params?.code;
@@ -197,83 +205,60 @@ export default async function LandingPage({ searchParams }) {
 
   return (
     <>
-      {/* ── JSON-LD Structured Data — injected in <head> via Next.js ── */}
-      {/* SoftwareApplication schema for AI engine discoverability */}
+      {/* ── JSON-LD Structured Data ── */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* WebSite schema for Sitelinks search box eligibility */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
       />
 
       <main className="min-h-screen">
         {/* ══════ Navigation ══════ */}
         <NavBar />
 
-        {/* ══════ Hero Section ══════ */}
-        {/* hero-full-screen class uses 100dvh on mobile via globals.css */}
+        {/* ══════ Hero Section — editorial dark-first ══════ */}
         <section
           className="hero-full-screen relative min-h-screen flex items-center justify-center overflow-hidden pt-16 sm:pt-20"
           aria-label="Hero — LancerLink freelancer portal introduction"
         >
           {/* Animated Grid Background */}
-          <div className="absolute inset-0 animated-grid opacity-30" aria-hidden="true" />
+          <div className="absolute inset-0 animated-grid opacity-20" aria-hidden="true" />
 
-          {/* Gradient Mesh Overlay — vw-based sizes prevent horizontal scroll on mobile */}
+          {/* Editorial gradient mesh — refined, no float animations */}
           <div className="absolute inset-0" aria-hidden="true">
-            <div className="absolute top-1/4 left-1/4 w-[40vw] max-w-[500px] h-[40vw] max-h-[500px] bg-primary/10 rounded-full blur-[120px] animate-float-1" />
-            <div className="absolute bottom-1/4 right-1/4 w-[35vw] max-w-[400px] h-[35vw] max-h-[400px] bg-accent/10 rounded-full blur-[100px] animate-float-2" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] max-w-[600px] h-[50vw] max-h-[600px] bg-primary/5 rounded-full blur-[140px] animate-float-3" />
-          </div>
-
-          {/* Floating Geometric Shapes — hidden on mobile to prevent overflow */}
-          <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-            <div className="absolute top-[15%] left-[10%] w-16 h-16 border border-primary/20 rounded-xl rotate-12 animate-float-1" />
-            <div className="absolute top-[25%] right-[15%] w-12 h-12 border border-accent/20 rounded-full animate-float-2" />
-            <div className="absolute bottom-[30%] left-[20%] w-20 h-20 border border-primary/15 rounded-2xl -rotate-6 animate-float-3" />
-            <div className="absolute bottom-[20%] right-[10%] w-10 h-10 border border-accent/15 rotate-45 animate-float-1" />
-            <div className="absolute top-[60%] left-[5%] w-8 h-8 bg-primary/10 rounded-lg rotate-12 animate-float-2" />
-            <div className="absolute top-[10%] right-[30%] w-14 h-14 bg-accent/5 rounded-full animate-float-3" />
+            <div className="absolute top-1/3 -left-[10%] w-[50vw] max-w-[600px] h-[50vw] max-h-[600px] bg-primary/8 rounded-full blur-[140px]" />
+            <div className="absolute bottom-1/4 -right-[5%] w-[40vw] max-w-[500px] h-[40vw] max-h-[500px] bg-accent/8 rounded-full blur-[120px]" />
           </div>
 
           {/* Hero Content */}
           <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-            {/* Availability Badge */}
-            <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-surface/50 backdrop-blur-sm mb-8 animate-fade-in"
-              role="status"
-              aria-label="Availability status: open for new projects"
-            >
-              <div className="w-2 h-2 rounded-full bg-success animate-glow" aria-hidden="true" />
-              <span className="text-sm text-text-secondary">Available for new projects</span>
-            </div>
 
-            {/*
-              CRITICAL SEO: Exactly ONE <h1> per page.
-              This is the primary keyword target for the landing page.
-              Keep it concise, compelling, and keyword-rich.
-            */}
-            <h1 className="font-sora font-extrabold text-5xl md:text-6xl lg:text-7xl leading-tight mb-6 animate-fade-in-up">
-              I Build Systems,
+            {/* CRITICAL SEO: Exactly ONE <h1> per page */}
+            <h1 className="font-sora font-extrabold text-hero mb-6 animate-fade-in-up">
+              Crafting Systems,
               <br />
-              <span className="gradient-text">Not Just Websites</span>
+              <span className="gradient-text">Not Just Code</span>
             </h1>
 
-            {/* Supporting copy — keyword density for "full-stack", "real-time data", "client portal" */}
+            {/* Supporting copy */}
             <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
               Full-stack development with a focus on scalable architectures,
               real-time data systems, and premium client experiences.
             </p>
 
-            {/* CTA Buttons — explicit aria-labels for screen readers and crawlers */}
+            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
               <a
                 href="#contact"
                 aria-label="Jump to contact form — get in touch about a project"
-                className="group flex items-center gap-2 px-8 py-3.5 rounded-xl border border-border hover:border-accent/50 text-text-primary hover:text-accent transition-all duration-300 font-medium"
+                className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-border hover:border-accent/40 text-text-primary hover:text-accent transition-all duration-300 font-medium"
               >
                 Get In Touch
                 <ArrowRightIcon />
@@ -281,7 +266,7 @@ export default async function LandingPage({ searchParams }) {
               <Link
                 href="/dashboard"
                 aria-label="Open the live LancerLink client portal demo"
-                className="group flex items-center gap-2 px-8 py-3.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-medium transition-all duration-300 shadow-lg shadow-primary/25 hover:shadow-primary/40"
+                className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-medium transition-all duration-300 shadow-lg shadow-primary/25 hover:shadow-primary/40"
               >
                 View Live Portal Demo
                 <ArrowRightIcon />
@@ -296,16 +281,13 @@ export default async function LandingPage({ searchParams }) {
         {/* ══════ Services Section ══════ */}
         <section id="services" className="relative py-24 px-6" aria-labelledby="services-heading">
           <div className="max-w-7xl mx-auto">
-            {/* Section Header */}
             <div className="text-center mb-16">
               <p className="text-accent font-medium text-sm uppercase tracking-widest mb-3">What I Do</p>
-              {/* h2 — subordinate to the page h1, correct hierarchy */}
-              <h2 id="services-heading" className="font-sora font-bold text-3xl md:text-4xl text-text-primary">
+              <h2 id="services-heading" className="font-sora font-bold text-display text-text-primary">
                 Services &amp; Expertise
               </h2>
             </div>
 
-            {/* Services Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {services.map((service, i) => (
                 <article
@@ -313,14 +295,12 @@ export default async function LandingPage({ searchParams }) {
                   className="glass-card p-6 group cursor-default"
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >
-                  {/* Icon Container */}
                   <div
                     className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors duration-300"
                     aria-hidden="true"
                   >
                     {service.icon}
                   </div>
-                  {/* h3 — subordinate to h2 */}
                   <h3 className="font-sora font-semibold text-lg text-text-primary mb-2">
                     {service.title}
                   </h3>
@@ -336,34 +316,31 @@ export default async function LandingPage({ searchParams }) {
         {/* ══════ Portfolio Section ══════ */}
         <section id="portfolio" className="relative py-24 px-6 border-t border-border/50" aria-labelledby="portfolio-heading">
           <div className="max-w-7xl mx-auto">
-            {/* Section Header */}
             <div className="text-center mb-16">
               <p className="text-accent font-medium text-sm uppercase tracking-widest mb-3">My Work</p>
-              <h2 id="portfolio-heading" className="font-sora font-bold text-3xl md:text-4xl text-text-primary">
+              <h2 id="portfolio-heading" className="font-sora font-bold text-display text-text-primary">
                 Selected Projects
               </h2>
             </div>
 
-            {/* Portfolio Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {portfolioItems.map((item, i) => (
                 <div key={item.title} className="relative group">
                   {item.locked ? (
-                    /* ── Locked Card ── */
                     <div
                       className="glass-card p-8 h-64 flex flex-col items-center justify-center text-center relative overflow-hidden"
                       aria-label={`${item.title} — client confidential project`}
                     >
-                      {/* Blurred placeholder */}
                       <div className="absolute inset-0 p-6 blur-sm opacity-30" aria-hidden="true">
                         <div className="h-4 w-3/4 bg-border rounded mb-3" />
                         <div className="h-3 w-1/2 bg-border rounded mb-6" />
                         <div className="h-32 w-full bg-border/50 rounded-lg" />
                       </div>
-                      {/* Lock overlay */}
                       <div className="relative z-10 flex flex-col items-center gap-3">
                         <div className="w-12 h-12 rounded-full bg-border/50 flex items-center justify-center text-text-muted" aria-hidden="true">
-                          <LockIcon />
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                          </svg>
                         </div>
                         <h3 className="font-sora font-semibold text-text-primary">{item.title}</h3>
                         <span className="text-xs text-text-muted bg-border/50 px-3 py-1 rounded-full">
@@ -372,7 +349,6 @@ export default async function LandingPage({ searchParams }) {
                       </div>
                     </div>
                   ) : (
-                    /* ── Unlocked Card ── */
                     <Link
                       href="/dashboard"
                       aria-label={`${item.title} — view live demo in the client portal`}
@@ -404,10 +380,9 @@ export default async function LandingPage({ searchParams }) {
         {/* ══════ Contact Section ══════ */}
         <section id="contact" className="relative py-24 px-6 border-t border-border/50" aria-labelledby="contact-heading">
           <div className="max-w-2xl mx-auto">
-            {/* Section Header */}
             <div className="text-center mb-12">
               <p className="text-accent font-medium text-sm uppercase tracking-widest mb-3">Get In Touch</p>
-              <h2 id="contact-heading" className="font-sora font-bold text-3xl md:text-4xl text-text-primary mb-4">
+              <h2 id="contact-heading" className="font-sora font-bold text-display text-text-primary mb-4">
                 Let&apos;s Work Together
               </h2>
               <p className="text-text-muted">
@@ -416,7 +391,6 @@ export default async function LandingPage({ searchParams }) {
               </p>
             </div>
 
-            {/* Contact Form Card — tighter padding on mobile */}
             <div className="glass-card p-5 sm:p-8 md:p-10">
               <ContactForm />
             </div>

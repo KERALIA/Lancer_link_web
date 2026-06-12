@@ -52,7 +52,7 @@ export default function AdminForm({
 
   useEffect(() => {
     if (selectedEmail) {
-      setActiveEmail(selectedEmail);
+      startTransition(() => { setActiveEmail(selectedEmail); });
     }
   }, [selectedEmail]);
 
@@ -108,7 +108,7 @@ export default function AdminForm({
     startTransition(() => {
       void loadProjects();
     });
-  }, [selectedEmail]);
+  }, [selectedEmail, activeEmail]);
 
   const loadProject = useCallback(async (email) => {
     if (!email) return;

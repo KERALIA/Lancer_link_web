@@ -10,21 +10,20 @@ import { useState, useEffect } from 'react';
  * @param {boolean} animate  — whether to animate from 0 on mount (default true)
  */
 export default function ProgressBar({ percent = 0, animate = true }) {
-  const [displayed, setDisplayed] = useState(animate ? 0 : percent);
+  const [animatedValue, setAnimatedValue] = useState(0);
 
   useEffect(() => {
-    if (!animate) {
-      setDisplayed(percent);
-      return;
-    }
+    if (!animate) return;
 
     // Kick off animation on next frame so the browser paints the 0-width bar first
     const raf = requestAnimationFrame(() => {
-      setDisplayed(percent);
+      setAnimatedValue(percent);
     });
 
     return () => cancelAnimationFrame(raf);
   }, [percent, animate]);
+
+  const displayed = animate ? animatedValue : percent;
 
   return (
     <div className="space-y-4">

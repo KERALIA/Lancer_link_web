@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, startTransition } from "react";
 import ClientSelectorSidebar from "@/components/ClientSelectorSidebar";
 
 // ── Time formatting helper ──
@@ -81,7 +81,7 @@ function MessageSkeleton() {
             className={`rounded-2xl px-4 py-3 ${
               isRight ? "bg-primary/10" : "bg-surface"
             }`}
-            style={{ width: `${30 + Math.random() * 30}%` }}
+            style={{ width: `${40 + (isRight ? 10 : 20)}%` }}
           >
             <div className="h-3 rounded bg-border/30 animate-pulse-skeleton mb-2" />
             <div
@@ -184,21 +184,24 @@ export default function MessagesClient({ userEmail, role }) {
   }, []);
 
   // ── Fetch messages ──
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = useCallback(async (signal) => {
     if (!activeEmail) {
       setLoading(false);
       return;
     }
     try {
       const res = await fetch(
-        `/api/messages?email=${encodeURIComponent(activeEmail)}`
+        `/api/messages?email=${encodeURIComponent(activeEmail)}`,
+        { signal },
       );
       if (!res.ok) return;
       const data = await res.json();
       const list = Array.isArray(data) ? data : data.messages ?? [];
       setMessages(list);
-    } catch {
-      // silently ignore polling errors
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        // silently ignore other polling errors
+      }
     } finally {
       setLoading(false);
     }
@@ -206,15 +209,25 @@ export default function MessagesClient({ userEmail, role }) {
 
   // ── Initial fetch + polling ──
   useEffect(() => {
-    if (!activeEmail) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
-  }, [fetchMessages, activeEmail]);
+    if (!activeEmail) return;
+    const ac = new AbortController();
+    startTransition(() => { setLoading(true); });
+    // Initial fetch — inline to avoid tracing setState through callback chain
+    fetch(`/api/messages?email=${encodeURIComponent(activeEmail)}`, { signal: ac.signal })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data.messages ?? [];
+        setMessages(list);
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          // silently ignore polling errors
+        }
+      })
+      .finally(() => setLoading(false));
+    const interval = setInterval(() => { fetchMessages(ac.signal); }, 5000);
+    return () => { clearInterval(interval); ac.abort(); };
+  }, [activeEmail, fetchMessages]);
 
   // ── Auto-scroll on new messages ──
   useEffect(() => {

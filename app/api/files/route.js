@@ -61,12 +61,13 @@ export async function GET(request) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // Fetch files
+    // Fetch files (bounded to 200)
     const { data: files, error: filesError } = await supabaseAdmin
       .from("lancerlink_files")
       .select("*")
       .eq("project_id", project.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(200);
 
     if (filesError) {
       console.error("[API /files] Files fetch error:", filesError);
@@ -177,9 +178,15 @@ export async function POST(request) {
       );
     }
 
-// Build storage path
+// Build storage path (sanitize filename to prevent path traversal)
     const timestamp = Date.now();
-    const fileName = file.name || "untitled";
+    const rawName = (file.name || "untitled")
+      .replace(/[/\\]/g, "_")          // strip path separators
+      .replace(/\.\./g, "_")           // strip parent-dir references
+      .replace(/[^a-zA-Z0-9._-]/g, "_")// strip any remaining unsafe chars
+      .replace(/_+/g, "_")             // collapse consecutive underscores
+      .replace(/^_|_$/g, "");          // trim leading/trailing underscores
+    const fileName = rawName.slice(0, 255); // limit length
     const storagePath = `${project.id}/${timestamp}_${fileName}`;
 
     // Read file buffer

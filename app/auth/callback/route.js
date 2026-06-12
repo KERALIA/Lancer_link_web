@@ -65,6 +65,12 @@ export async function GET(request) {
     return NextResponse.redirect(`${origin}/login?error=no_email`);
   }
 
+  // Handle invite and password-recovery redirects
+  const type = requestUrl.searchParams.get("type");
+  if (type === "invite" || type === "recovery") {
+    return NextResponse.redirect(`${origin}/auth/setup-password`);
+  }
+
   if (!isSupabaseConfigured()) {
     return NextResponse.redirect(`${origin}/dashboard`);
   }

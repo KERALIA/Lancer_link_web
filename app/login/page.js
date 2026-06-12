@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 // ─── SEO Note ─────────────────────────────────────────────────────────────────
@@ -15,19 +16,76 @@ const AUTH_ERRORS = {
 };
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState("password"); // "password" | "magic"
   const [status, setStatus] = useState("idle");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(() => {
+    if (typeof window !== "undefined") {
+      const code = new URLSearchParams(window.location.search).get("error");
+      return code && AUTH_ERRORS[code] ? AUTH_ERRORS[code] : null;
+    }
+    return null;
+  });
   const [sentEmail, setSentEmail] = useState("");
 
-  useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("error");
-    if (code && AUTH_ERRORS[code]) {
-      setError(AUTH_ERRORS[code]);
-    }
+  const resetForm = useCallback(() => {
+    setStatus("idle");
+    setError(null);
   }, []);
 
-  async function handleSubmit(e) {
+  // ── Password sign in ──
+  async function handlePasswordSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    setStatus("loading");
+
+    try {
+      const res = await fetch("/api/auth/login-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (res.status === 429) {
+          setStatus("error");
+          setError(
+            body?.error || "Too many attempts. Please wait before trying again.",
+          );
+          return;
+        }
+        if (res.status === 403 && body?.notRegistered) {
+          setStatus("not_registered");
+          return;
+        }
+        setStatus("error");
+        setError(
+          body?.error || "Email or password is incorrect",
+        );
+        return;
+      }
+
+      // Success — navigate to dashboard
+      router.push("/dashboard");
+    } catch (err) {
+      setStatus("error");
+      const msg = err?.message || "";
+      setError(
+        msg.toLowerCase().includes("fetch")
+          ? "Cannot reach the server. Make sure the app is running and try again."
+          : "Network error. Please try again.",
+      );
+    }
+  }
+
+  // ── Magic link send (existing OTP flow) ──
+  async function handleMagicSubmit(e) {
     e.preventDefault();
     setError(null);
     setStatus("loading");
@@ -41,7 +99,6 @@ export default function LoginPage() {
       const body = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // Unregistered user — show dedicated friendly state
         if (body?.notRegistered) {
           setStatus("not_registered");
           return;
@@ -64,87 +121,58 @@ export default function LoginPage() {
     }
   }
 
-  /* ── helper: reset back to form ── */
-  function resetForm() {
-    setStatus("idle");
+  // ── Forgot password — send reset email ──
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      setError("Enter your email address first.");
+      return;
+    }
     setError(null);
+    setStatus("loading");
+
+    try {
+      const res = await fetch("/api/auth/send-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setStatus("error");
+        setError(body?.error || "Something went wrong. Try again later.");
+        return;
+      }
+
+      setSentEmail(email.trim());
+      setStatus("password_reset_sent");
+    } catch (err) {
+      setStatus("error");
+      const msg = err?.message || "";
+      setError(
+        msg.toLowerCase().includes("fetch")
+          ? "Cannot reach the server. Make sure the app is running and try again."
+          : "Network error. Please try again.",
+      );
+    }
   }
 
-  return (
-    <main className="min-h-screen flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md">
-        <div className="glass-card p-8 md:p-10">
-          <div className="text-center mb-8">
-            {/*
-              This is a client-only auth page — intentionally NO <h1> that
-              would compete with the landing page. The login form is
-              a utility UI, not a content page.
-            */}
-            <p className="font-sora font-bold text-xl gradient-text mb-2" aria-label="LancerLink">
-              LancerLink
-            </p>
-            <p className="text-text-muted text-sm">
-              Sign in with a magic link sent to your email
-            </p>
-          </div>
-
-          {/* ── Magic link sent ── */}
-          {status === "success" && (
-            <div className="text-center space-y-4" role="status" aria-live="polite" aria-label="Magic link sent successfully">
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
-                style={{ background: "rgba(34, 197, 94, 0.15)" }}
-                aria-hidden="true"
-              >
-                <svg
-                  className="w-7 h-7 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                  />
-                </svg>
-              </div>
-              <h2 className="font-sora font-semibold text-lg text-text-primary">
-                Check your email for a login link
-              </h2>
-              <p className="text-sm text-text-secondary">
-                We sent a link to{" "}
-                <span className="text-text-primary font-medium">{sentEmail}</span>
-              </p>
-              <p className="text-xs text-text-muted">
-                The link expires in 1 hour. Access is invite-only — your project
-                manager must add your email to the portal.
-              </p>
-              <button
-                type="button"
-                onClick={resetForm}
-                aria-label="Use a different email address to request a login link"
-                className="text-sm text-accent hover:underline cursor-pointer"
-              >
-                Use a different email
-              </button>
-            </div>
-          )}
-
-          {/* ── Email not registered ── */}
-          {status === "not_registered" && (
+  // ── Shared: Email not registered screen ──
+  if (status === "not_registered") {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">
+          <div className="glass-card p-8 md:p-10">
             <div className="text-center space-y-5" role="alert" aria-live="assertive">
-              {/* Icon */}
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
-                style={{ background: "rgba(251, 191, 36, 0.12)" }}
+                style={{ background: "var(--warning-muted)" }}
                 aria-hidden="true"
               >
                 <svg
                   className="w-7 h-7"
-                  style={{ color: "#f59e0b" }}
+                  style={{ color: "var(--warning)" }}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -159,13 +187,14 @@ export default function LoginPage() {
                 </svg>
               </div>
 
-              {/* Heading */}
               <div>
                 <h2 className="font-sora font-semibold text-lg text-text-primary mb-1">
                   Email not registered
                 </h2>
                 <p className="text-sm text-text-secondary leading-relaxed">
-                  <span className="text-text-primary font-medium">{email.trim()}</span>{" "}
+                  <span className="text-text-primary font-medium">
+                    {email.trim()}
+                  </span>{" "}
                   hasn&apos;t been added to the portal yet.
                   <br />
                   Please contact the admin through the form on the home page and
@@ -173,10 +202,8 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* Divider */}
               <div className="border-t border-border/50" role="separator" />
 
-              {/* CTAs */}
               <div className="flex flex-col gap-3">
                 <Link
                   href="/#contact"
@@ -203,18 +230,162 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  aria-label="Try a different email address for login"
+                  aria-label="Try a different email address"
                   className="text-sm text-text-muted hover:text-text-secondary transition-colors cursor-pointer"
                 >
                   Try a different email
                 </button>
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      </main>
+    );
+  }
 
-          {/* ── Default form (idle / error / loading) ── */}
-          {status !== "success" && status !== "not_registered" && (
-            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+  // ── Shared: Magic link sent ──
+  if (status === "success") {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">
+          <div className="glass-card p-8 md:p-10">
+            <div
+              className="text-center space-y-4"
+              role="status"
+              aria-live="polite"
+              aria-label="Magic link sent successfully"
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
+                style={{ background: "var(--success-muted)" }}
+                aria-hidden="true"
+              >
+                <svg
+                  className="w-7 h-7"
+                  style={{ color: "var(--success)" }}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                  />
+                </svg>
+              </div>
+              <h2 className="font-sora font-semibold text-lg text-text-primary">
+                Check your email
+              </h2>
+              <p className="text-sm text-text-secondary">
+                We sent a link to{" "}
+                <span className="text-text-primary font-medium">
+                  {sentEmail}
+                </span>
+              </p>
+              <p className="text-xs text-text-muted">
+                The link expires in 1 hour. Access is invite-only — your project
+                manager must add your email to the portal.
+              </p>
+              <button
+                type="button"
+                onClick={resetForm}
+                aria-label="Use a different email address"
+                className="text-sm text-accent hover:underline cursor-pointer"
+              >
+                Use a different email
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Shared: Password reset sent ──
+  if (status === "password_reset_sent") {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">
+          <div className="glass-card p-8 md:p-10">
+            <div
+              className="text-center space-y-4"
+              role="status"
+              aria-live="polite"
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
+                style={{ background: "var(--success-muted)" }}
+                aria-hidden="true"
+              >
+                <svg
+                  className="w-7 h-7"
+                  style={{ color: "var(--success)" }}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                  />
+                </svg>
+              </div>
+              <h2 className="font-sora font-semibold text-lg text-text-primary">
+                Check your email for a password reset link
+              </h2>
+              <p className="text-sm text-text-secondary">
+                If an account exists for{" "}
+                <span className="text-text-primary font-medium">
+                  {sentEmail}
+                </span>
+                , you&apos;ll receive a reset link shortly.
+              </p>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="text-sm text-accent hover:underline cursor-pointer"
+              >
+                Back to sign in
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Main form (idle / error / loading) ──
+  return (
+    <main className="min-h-screen flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-md">
+        <div className="glass-card p-8 md:p-10">
+          <div className="text-center mb-8">
+            <p
+              className="font-sora font-bold text-xl gradient-text mb-2"
+              aria-label="LancerLink"
+            >
+              LancerLink
+            </p>
+            <p className="text-text-muted text-sm">
+              {mode === "password"
+                ? "Sign in with your email and password"
+                : "Sign in with a magic link sent to your email"}
+            </p>
+          </div>
+
+          {/* ── Password form (default) ── */}
+          {mode === "password" && (
+            <form
+              onSubmit={handlePasswordSubmit}
+              className="space-y-5"
+              noValidate
+            >
               <div>
                 <label
                   htmlFor="login-email"
@@ -233,12 +404,111 @@ export default function LoginPage() {
                   placeholder="you@company.com"
                   aria-describedby={error ? "login-error" : undefined}
                   className="input-field disabled:opacity-60"
-                  style={{ fontSize: "16px" /* prevent Android auto-zoom */ }}
+                  style={{ fontSize: "16px" }}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="login-password"
+                  className="block text-sm font-medium text-text-secondary mb-2"
+                >
+                  Password
+                </label>
+                <input
+                  id="login-password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={status === "loading"}
+                  placeholder="Enter your password"
+                  aria-describedby={error ? "login-error" : undefined}
+                  className="input-field disabled:opacity-60"
+                  style={{ fontSize: "16px" }}
                 />
               </div>
 
               {error && (
-                <p id="login-error" className="text-sm text-error" role="alert" aria-live="assertive">
+                <p
+                  id="login-error"
+                  className="text-sm text-error"
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={status === "loading" || !email.trim() || !password}
+                className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {status === "loading" ? "Signing in…" : "Sign In"}
+              </button>
+
+              <div className="flex flex-col items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={status === "loading"}
+                  className="text-sm text-accent hover:underline cursor-pointer disabled:opacity-50"
+                >
+                  Forgot password?
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("magic");
+                    resetForm();
+                  }}
+                  className="text-sm text-text-muted hover:text-text-secondary transition-colors cursor-pointer"
+                >
+                  Sign in with a magic link instead
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* ── Magic link form (toggle) ── */}
+          {mode === "magic" && (
+            <form
+              onSubmit={handleMagicSubmit}
+              className="space-y-5"
+              noValidate
+            >
+              <div>
+                <label
+                  htmlFor="login-email-magic"
+                  className="block text-sm font-medium text-text-secondary mb-2"
+                >
+                  Email address
+                </label>
+                <input
+                  id="login-email-magic"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={status === "loading"}
+                  placeholder="you@company.com"
+                  aria-describedby={error ? "login-error" : undefined}
+                  className="input-field disabled:opacity-60"
+                  style={{ fontSize: "16px" }}
+                />
+              </div>
+
+              {error && (
+                <p
+                  id="login-error"
+                  className="text-sm text-error"
+                  role="alert"
+                  aria-live="assertive"
+                >
                   {error}
                 </p>
               )}
@@ -246,11 +516,23 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={status === "loading" || !email.trim()}
-                aria-label={status === "loading" ? "Sending magic login link…" : "Send a magic login link to your email"}
                 className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {status === "loading" ? "Sending…" : "Send login link"}
               </button>
+
+              <div className="text-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("password");
+                    resetForm();
+                  }}
+                  className="text-sm text-text-muted hover:text-text-secondary transition-colors cursor-pointer"
+                >
+                  Sign in with password instead
+                </button>
+              </div>
             </form>
           )}
         </div>

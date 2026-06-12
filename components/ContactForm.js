@@ -11,20 +11,17 @@ const INITIAL = { name: '', email: '', message: '' };
 export default function ContactForm() {
   const [form, setForm]       = useState(INITIAL);
   const [errors, setErrors]   = useState({});
-  const [status, setStatus]   = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
+  const [status, setStatus]   = useState('idle');
   const [serverError, setServerError] = useState('');
 
-  // ── Field change ─────────────────────────────────────────────
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    // Clear that field's error as the user types
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  // ── Client-side validation ───────────────────────────────────
   const validate = () => {
     const next = {};
     if (!form.name.trim())                          next.name    = 'Name is required.';
@@ -42,7 +39,6 @@ export default function ContactForm() {
     return Object.keys(next).length === 0;
   };
 
-  // ── Submit ───────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
@@ -64,7 +60,6 @@ export default function ContactForm() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // Server returned field-level validation errors
         if (data.details) {
           setErrors(data.details);
           setStatus('idle');
@@ -81,18 +76,15 @@ export default function ContactForm() {
     }
   };
 
-  // ── Reset after error ────────────────────────────────────────
   const handleReset = () => {
     setStatus('idle');
     setServerError('');
     setErrors({});
   };
 
-  // ── Shared input classes ──────────────────────────────────────
   const inputBase =
     'bg-background border rounded-xl px-4 py-3 text-text-primary w-full transition-all duration-200 outline-none placeholder:text-text-muted'
-    + ' text-sm sm:text-sm' /* 16px base prevents Android/iOS auto-zoom on focus */;
-    /* Note: actual font-size is controlled via style to hit exactly 16px on mobile */
+    + ' text-sm sm:text-sm';
   const inputClasses = (field) =>
     `${inputBase} ${
       errors[field]
@@ -100,18 +92,16 @@ export default function ContactForm() {
         : 'border-border focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.15)]'
     }`;
 
-  // ── Success state ─────────────────────────────────────────────
   if (status === 'success') {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in-up">
-        {/* Animated checkmark */}
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
-          style={{ background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)' }}
+          style={{ background: 'var(--success-muted)', border: '1px solid var(--success)' }}
         >
           <svg
             className="w-8 h-8"
-            style={{ color: '#22c55e' }}
+            style={{ color: 'var(--success)' }}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -127,7 +117,7 @@ export default function ContactForm() {
           Message Sent!
         </h3>
         <p className="text-text-muted text-sm mb-6 max-w-xs">
-          Thanks for reaching out. I'll get back to you within 24 hours.
+          Thanks for reaching out. I&apos;ll get back to you within 24 hours.
         </p>
         <button
           type="button"
@@ -142,13 +132,12 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
-      {/* Global server error banner */}
       {status === 'error' && serverError && (
         <div
           className="flex items-start gap-3 rounded-xl px-4 py-3 text-sm animate-fade-in"
           style={{
-            background: 'rgba(239,68,68,0.08)',
-            border: '1px solid rgba(239,68,68,0.25)',
+            background: 'var(--error-muted)',
+            border: '1px solid var(--error)',
             color: 'var(--error)',
           }}
         >
@@ -169,23 +158,9 @@ export default function ContactForm() {
         </div>
       )}
 
-      {/* Name */}
       <div>
-        <label htmlFor="contact-name" className="block text-sm text-text-secondary mb-1.5 font-medium">
-          Name
-        </label>
-        <input
-          id="contact-name"
-          type="text"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          placeholder="Your name"
-          required
-          autoComplete="name"
-          disabled={status === 'loading'}
-          className={inputClasses('name')}
-        />
+        <label htmlFor="contact-name" className="block text-sm text-text-secondary mb-1.5 font-medium">Name</label>
+        <input id="contact-name" type="text" name="name" value={form.name} onChange={handleChange} placeholder="Your name" required autoComplete="name" disabled={status === 'loading'} className={inputClasses('name')} />
         {errors.name && (
           <p className="mt-1.5 text-xs text-error flex items-center gap-1 animate-fade-in">
             <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -196,23 +171,9 @@ export default function ContactForm() {
         )}
       </div>
 
-      {/* Email */}
       <div>
-        <label htmlFor="contact-email" className="block text-sm text-text-secondary mb-1.5 font-medium">
-          Email
-        </label>
-        <input
-          id="contact-email"
-          type="email"
-          name="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="you@example.com"
-          required
-          autoComplete="email"
-          disabled={status === 'loading'}
-          className={inputClasses('email')}
-        />
+        <label htmlFor="contact-email" className="block text-sm text-text-secondary mb-1.5 font-medium">Email</label>
+        <input id="contact-email" type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@example.com" required autoComplete="email" disabled={status === 'loading'} className={inputClasses('email')} />
         {errors.email && (
           <p className="mt-1.5 text-xs text-error flex items-center gap-1 animate-fade-in">
             <svg className="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -223,23 +184,9 @@ export default function ContactForm() {
         )}
       </div>
 
-      {/* Message */}
       <div>
-        <label htmlFor="contact-message" className="block text-sm text-text-secondary mb-1.5 font-medium">
-          Message
-        </label>
-        <textarea
-          id="contact-message"
-          name="message"
-          value={form.message}
-          onChange={handleChange}
-          placeholder="Tell me about your project…"
-          required
-          rows={5}
-          disabled={status === 'loading'}
-          className={`${inputClasses('message')} resize-none`}
-          style={{ minHeight: '140px', fontSize: '16px' /* prevents Android zoom */ }}
-        />
+        <label htmlFor="contact-message" className="block text-sm text-text-secondary mb-1.5 font-medium">Message</label>
+        <textarea id="contact-message" name="message" value={form.message} onChange={handleChange} placeholder="Tell me about your project…" required rows={5} disabled={status === 'loading'} className={`${inputClasses('message')} resize-none`} style={{ minHeight: '140px', fontSize: '16px' }} />
         <div className="flex items-start justify-between mt-1.5">
           {errors.message ? (
             <p className="text-xs text-error flex items-center gap-1 animate-fade-in">
@@ -248,37 +195,22 @@ export default function ContactForm() {
               </svg>
               {errors.message}
             </p>
-          ) : (
-            <span />
-          )}
-          {/* Character counter */}
-          <span
-            className="text-xs ml-auto shrink-0"
-            style={{ color: form.message.length > 1800 ? 'var(--error)' : 'var(--text-muted)' }}
-          >
+          ) : <span />}
+          <span className="text-xs ml-auto shrink-0" style={{ color: form.message.length > 1800 ? 'var(--error)' : 'var(--text-muted)' }}>
             {form.message.length}/2000
           </span>
         </div>
       </div>
 
-      {/* Submit button */}
       <button
         type="submit"
         disabled={status === 'loading'}
         className="relative w-full flex items-center justify-center gap-2.5 bg-primary hover:bg-primary-hover text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-300 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed shadow-lg hover:shadow-primary/30 active:scale-[0.98] overflow-hidden group"
       >
-        {/* Shimmer effect on hover */}
         <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
         {status === 'loading' ? (
           <>
-            <svg
-              className="w-4 h-4 animate-spin-slow"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
+            <svg className="w-4 h-4 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
               <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
             </svg>

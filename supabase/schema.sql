@@ -311,6 +311,10 @@ create policy "Service role full access"
   on lancerlink_messages for all to service_role
   using (true) with check (true);
 
+-- FK index for faster joins on project_id
+create index if not exists idx_lancerlink_messages_project_id
+  on lancerlink_messages(project_id);
+
 -- ============================================================
 -- Files table
 -- ============================================================
@@ -514,6 +518,10 @@ create policy "Admins can delete any files"
     )
   );
 
+-- FK index for faster joins on project_id
+create index if not exists idx_lancerlink_files_project_id
+  on lancerlink_files(project_id);
+
 -- ============================================================
 -- Storage bucket policies
 -- ============================================================
@@ -532,9 +540,7 @@ drop policy if exists "Admins can update any files" on storage.objects;
 drop policy if exists "Users can delete own project files" on storage.objects;
 drop policy if exists "Admins can delete any files" on storage.objects;
 
--- Then recreate all policies...
-create policy "Users can view own project files" ...
--- (rest of your policies unchanged)
+-- (Policies are recreated in full below — no placeholder stubs needed)
 
 -- ============================================================
 -- Contact Messages table  (portfolio contact form → same DB)
@@ -544,8 +550,9 @@ create table if not exists contact_messages (
   name       text        not null,
   email      text        not null,
   message    text        not null,
+  ip_hash    text,                                    -- sha256 prefix, for rate-limit dedup
   created_at timestamptz default now(),
-  read       boolean     default false   -- lets you mark messages as read in future
+  read       boolean     default false               -- lets you mark messages as read in future
 );
 
 -- No RLS needed for inserts — the API route uses the service-role key.

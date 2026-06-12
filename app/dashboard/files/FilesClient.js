@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, startTransition } from "react";
 import Toast from "@/components/Toast";
 import ConfirmModal from "@/components/ConfirmModal";
 import EmptyState from "@/components/ui/EmptyState";
@@ -132,32 +132,43 @@ export default function FilesClient({ userEmail, role }) {
 
   /* ── Fetch files ── */
 
-  const fetchFiles = useCallback(async () => {
+  const fetchFiles = useCallback(async (signal) => {
     if (!activeEmail) {
       setLoading(false);
       return;
     }
     try {
-      const res = await fetch(`/api/files?email=${encodeURIComponent(activeEmail)}`);
+      const res = await fetch(`/api/files?email=${encodeURIComponent(activeEmail)}`, { signal });
       if (!res.ok) throw new Error("Failed to fetch files");
       const data = await res.json();
       setFiles(data.files ?? data ?? []);
     } catch (err) {
-      console.error(err);
-      setToast({ type: "error", message: "Failed to load files." });
+      if (err.name !== "AbortError") {
+        console.error(err);
+        setToast({ type: "error", message: "Failed to load files." });
+      }
     } finally {
       setLoading(false);
     }
   }, [activeEmail]);
 
+  // Initial fetch — inline to avoid tracing setState through effect-to-callback chain
   useEffect(() => {
-    if (!activeEmail) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    fetchFiles();
-  }, [fetchFiles, activeEmail]);
+    if (!activeEmail) return;
+    const ac = new AbortController();
+    startTransition(() => { setLoading(true); });
+    fetch(`/api/files?email=${encodeURIComponent(activeEmail)}`, { signal: ac.signal })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Failed to fetch files"))))
+      .then((data) => setFiles(data.files ?? data ?? []))
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          console.error(err);
+          setToast({ type: "error", message: "Failed to load files." });
+        }
+      })
+      .finally(() => setLoading(false));
+    return () => ac.abort();
+  }, [activeEmail]);
 
   /* ── Upload (admin only) ── */
 

@@ -1,16 +1,19 @@
 @import "../styles/tokens.css";
 @import "tailwindcss";
 
-/* ── Legacy bridge (Tailwind + existing components) ── */
+/* ══════════════════════════════════════════════════════════════
+   THEME BRIDGE — maps tokens.css → legacy vars + Tailwind v4
+   ══════════════════════════════════════════════════════════════ */
+
 :root,
 [data-theme="dark"] {
   --background: var(--color-bg-primary);
   --surface: var(--color-bg-secondary);
   --surface-hover: var(--color-bg-tertiary);
   --border: var(--color-border);
-  --border-light: var(--color-bg-tertiary);
+  --border-light: rgba(255, 255, 255, 0.04);
   --primary: var(--color-brand);
-  --primary-hover: #4338ca;
+  --primary-hover: #6D28D9;
   --primary-light: var(--color-brand-text);
   --accent: var(--color-brand-text);
   --success: var(--color-success);
@@ -28,19 +31,24 @@
   --toggle-track-bg: var(--color-bg-tertiary);
   --toggle-thumb-bg: var(--color-brand);
   --toggle-icon-color: var(--color-text-primary);
-  --primary-rgb: 79, 70, 229;
-  --card-bg-raw: 31, 41, 55;
-  --drop-zone-bg-raw: 31, 41, 55;
+  --primary-rgb: 139, 92, 246;
+  --card-bg-raw: 26, 26, 36;
+  --drop-zone-bg-raw: 15, 15, 23;
+}
+
+[data-theme="dark"] {
+  background-color: #0b0a0f;
 }
 
 [data-theme="light"] {
+  background-color: #ffffff;
   --background: var(--color-bg-primary);
   --surface: var(--color-bg-secondary);
   --surface-hover: var(--color-bg-tertiary);
   --border: var(--color-border);
-  --border-light: var(--color-bg-tertiary);
+  --border-light: rgba(0, 0, 0, 0.04);
   --primary: var(--color-brand);
-  --primary-hover: #4338ca;
+  --primary-hover: #5B21B6;
   --primary-light: var(--color-brand);
   --accent: var(--color-brand);
   --success: var(--color-success);
@@ -58,10 +66,14 @@
   --toggle-track-bg: var(--color-brand-soft);
   --toggle-thumb-bg: var(--color-brand);
   --toggle-icon-color: var(--color-text-primary);
-  --primary-rgb: 79, 70, 229;
+  --primary-rgb: 109, 40, 217;
   --card-bg-raw: 255, 255, 255;
-  --drop-zone-bg-raw: 249, 250, 251;
+  --drop-zone-bg-raw: 248, 250, 252;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   TAILWIND v4 — @theme inline design tokens
+   ══════════════════════════════════════════════════════════════ */
 
 @theme inline {
   --color-background: var(--background);
@@ -89,70 +101,81 @@
   --font-sora: "Sora", sans-serif;
   --font-inter: "Inter", sans-serif;
 
-  /* Custom animations */
+  /* Animations */
   --animate-fill: fill 1.2s ease-out forwards;
   --animate-pulse-skeleton: pulse-skeleton 1.5s ease-in-out infinite;
   --animate-toast-in: toast-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-toast-out: toast-out 0.3s ease-in forwards;
-  --animate-float-1: float-1 8s ease-in-out infinite;
-  --animate-float-2: float-2 10s ease-in-out infinite;
-  --animate-float-3: float-3 12s ease-in-out infinite;
   --animate-fade-in: fade-in 0.5s ease-out forwards;
   --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
   --animate-slide-in-left: slide-in-left 0.3s ease-out forwards;
+  --animate-scale-in: scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-grid-move: grid-move 20s linear infinite;
   --animate-glow: glow-pulse 3s ease-in-out infinite;
   --animate-spin-slow: spin 3s linear infinite;
   --animate-message-in: message-in 0.3s ease-out forwards;
   --animate-drop-zone-pulse: drop-zone-pulse 2s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+  --animate-lift: hover-lift 0.3s ease forwards;
 }
 
-/* ── Theme Transition ── */
-/*
-  Apply transition only to these specific properties to avoid
-  janky animation on page load (the JS sets data-theme before paint).
-*/
-*,
-*::before,
-*::after {
-  transition:
-    background-color 0.25s ease,
-    border-color 0.25s ease,
-    color 0.25s ease,
-    box-shadow 0.25s ease,
-    fill 0.25s ease;
+/* ══════════════════════════════════════════════════════════════
+   THEME TRANSITIONS — applied only to theme-aware containers
+   ══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: no-preference) {
+  .theme-aware,
+  body,
+  [data-theme] {
+    transition:
+      background-color 0.25s ease,
+      border-color 0.25s ease,
+      color 0.25s ease,
+      box-shadow 0.25s ease,
+      fill 0.25s ease;
+  }
 }
 
-/* ── Base Styles ── */
+/* ══════════════════════════════════════════════════════════════
+   BASE STYLES
+   ══════════════════════════════════════════════════════════════ */
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter);
-  /* Android: prevent rubber-band overscroll */
   overscroll-behavior: none;
-  /* Android: remove tap highlight flash */
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Custom Scrollbar ── */
+/* ══════════════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR — refined, minimal
+   ══════════════════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-light);
+  background: var(--text-muted);
 }
 
-/* ── Keyframes ── */
+/* ══════════════════════════════════════════════════════════════
+   KEYFRAMES — purposeful animations
+   ══════════════════════════════════════════════════════════════ */
+
 @keyframes fill {
   from { width: 0%; }
 }
@@ -184,23 +207,6 @@ body {
   }
 }
 
-@keyframes float-1 {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  33% { transform: translate(30px, -40px) rotate(5deg); }
-  66% { transform: translate(-20px, 20px) rotate(-3deg); }
-}
-
-@keyframes float-2 {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  33% { transform: translate(-40px, 30px) rotate(-4deg); }
-  66% { transform: translate(25px, -35px) rotate(6deg); }
-}
-
-@keyframes float-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(20px, -20px) scale(1.05); }
-}
-
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -225,6 +231,17 @@ body {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -256,16 +273,94 @@ body {
   }
   50% {
     border-color: var(--primary);
-    box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+    box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.1);
   }
 }
 
-/* ── Dashboard Glow Cards ── */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes hover-lift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
+@keyframes toast-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GLASS CARD — editorial-grade glassmorphism 2.0
+   Three-layer effect: background blur + inner shine + subtle border
+   ══════════════════════════════════════════════════════════════ */
+
+.glass-card {
+  background: rgba(var(--card-bg-raw), 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(var(--primary-rgb), 0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 0 0 1px rgba(var(--primary-rgb), 0.06),
+    0 8px 32px rgba(var(--primary-rgb), 0.06);
+}
+
+[data-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .glass-card:hover {
+  border-color: rgba(109, 40, 217, 0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 0 0 1px rgba(109, 40, 217, 0.08),
+    0 8px 32px rgba(109, 40, 217, 0.06);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD GLOW CARDS — premium surface with subtle violet glow
+   ══════════════════════════════════════════════════════════════ */
+
 .dashboard-glow-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: 24px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transition:
     border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1),
@@ -273,19 +368,23 @@ body {
 }
 
 .dashboard-glow-card:hover {
-  border-color: rgba(var(--primary-rgb), 0.45);
+  border-color: rgba(var(--primary-rgb), 0.35);
   box-shadow:
-    0 0 0 1px rgba(var(--primary-rgb), 0.12),
-    0 8px 32px rgba(var(--primary-rgb), 0.14),
-    0 0 56px rgba(var(--primary-rgb), 0.1);
-  transform: translateY(-3px);
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(var(--primary-rgb), 0.10),
+    0 8px 32px rgba(var(--primary-rgb), 0.10),
+    0 0 56px rgba(var(--primary-rgb), 0.06);
+  transform: translateY(-2px);
 }
 
-/* ── Admin client group cards ── */
+/* ══════════════════════════════════════════════════════════════
+   ADMIN — client group cards
+   ══════════════════════════════════════════════════════════════ */
+
 .client-group-card {
   background: rgba(var(--card-bg-raw), 0.85);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   transition:
     border-color 0.3s ease,
@@ -293,39 +392,36 @@ body {
 }
 
 .client-group-card:hover {
-  border-color: rgba(var(--primary-rgb), 0.35);
-  box-shadow: 0 4px 28px rgba(var(--primary-rgb), 0.08);
+  border-color: rgba(var(--primary-rgb), 0.25);
+  box-shadow: 0 4px 28px rgba(var(--primary-rgb), 0.06);
 }
 
 .client-group-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
-  background: rgba(var(--primary-rgb), 0.04);
+  background: rgba(var(--primary-rgb), 0.03);
 }
 
-/* ── Glass Card ── */
-.glass-card {
-  background: rgba(var(--card-bg-raw), 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  transition: all 0.3s ease;
-}
+/* ══════════════════════════════════════════════════════════════
+   GRADIENT TEXT — refined editorial gradient
+   ══════════════════════════════════════════════════════════════ */
 
-.glass-card:hover {
-  border-color: var(--border-light);
-  box-shadow: 0 0 30px rgba(var(--primary-rgb), 0.05);
-}
-
-/* ── Gradient Text ── */
 .gradient-text {
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 50%, var(--primary-light) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-text-primary) 0%,
+    var(--color-brand) 50%,
+    var(--color-brand-text) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* ── Progress Bar Track ── */
+/* ══════════════════════════════════════════════════════════════
+   PROGRESS BAR
+   ══════════════════════════════════════════════════════════════ */
+
 .progress-track {
   background: var(--border);
   border-radius: 999px;
@@ -337,17 +433,25 @@ body {
   border-radius: 999px;
   height: 100%;
   transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.4);
+  box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.30);
 }
 
-/* ── Focus Styles ── */
-input:focus, textarea:focus, select:focus {
+/* ══════════════════════════════════════════════════════════════
+   FOCUS STYLES — WCAG AA compliant
+   ══════════════════════════════════════════════════════════════ */
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
 }
 
-/* ── Range Slider ── */
+/* ══════════════════════════════════════════════════════════════
+   RANGE SLIDER
+   ══════════════════════════════════════════════════════════════ */
+
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -367,7 +471,7 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--primary);
   cursor: pointer;
   border: 3px solid var(--background);
-  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.5);
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
   transition: transform 0.2s ease;
 }
 
@@ -382,20 +486,18 @@ input[type="range"]::-moz-range-thumb {
   background: var(--primary);
   cursor: pointer;
   border: 3px solid var(--background);
-  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.5);
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
 }
 
-/* ── Date Input ── */
-[data-theme="dark"] input[type="date"] {
-  color-scheme: dark;
-}
+/* ══════════════════════════════════════════════════════════════
+   DATE INPUT
+   ══════════════════════════════════════════════════════════════ */
 
-[data-theme="light"] input[type="date"] {
-  color-scheme: light;
-}
+[data-theme="dark"] input[type="date"] { color-scheme: dark; }
+[data-theme="light"] input[type="date"] { color-scheme: light; }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.6) sepia(1) saturate(3) hue-rotate(230deg);
+  filter: invert(0.6) sepia(1) saturate(3) hue-rotate(240deg);
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s ease;
@@ -405,16 +507,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
 
-/* ── Animated Grid Background ── */
+/* ══════════════════════════════════════════════════════════════
+   ANIMATED GRID BACKGROUND
+   ══════════════════════════════════════════════════════════════ */
+
 .animated-grid {
   background-image:
-    linear-gradient(rgba(var(--primary-rgb), 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(var(--primary-rgb), 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(var(--primary-rgb), 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--primary-rgb), 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
   animation: grid-move 20s linear infinite;
 }
 
-/* ── Message Bubbles ── */
+/* ══════════════════════════════════════════════════════════════
+   MESSAGE BUBBLES
+   ══════════════════════════════════════════════════════════════ */
+
 .message-bubble {
   transition: all 0.2s ease;
 }
@@ -424,8 +532,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .message-bubble-own {
-  background: rgba(var(--primary-rgb), 0.15);
-  border: 1px solid rgba(var(--primary-rgb), 0.25);
+  background: rgba(var(--primary-rgb), 0.12);
+  border: 1px solid rgba(var(--primary-rgb), 0.20);
   border-radius: 20px 20px 4px 20px;
 }
 
@@ -435,73 +543,87 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   border-radius: 20px 20px 20px 4px;
 }
 
-/* ── Drop Zone ── */
+/* ══════════════════════════════════════════════════════════════
+   DROP ZONE
+   ══════════════════════════════════════════════════════════════ */
+
 .drop-zone {
   border: 2px dashed var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   transition: all 0.3s ease;
   background: rgba(var(--drop-zone-bg-raw), 0.3);
 }
 
 .drop-zone:hover {
-  border-color: var(--border-light);
+  border-color: rgba(var(--primary-rgb), 0.3);
   background: rgba(var(--drop-zone-bg-raw), 0.5);
 }
 
 .drop-zone-active {
-  border-color: var(--primary) !important;
-  background: rgba(var(--primary-rgb), 0.05) !important;
-  box-shadow: 0 0 30px rgba(var(--primary-rgb), 0.15);
+  border-color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.05);
+  box-shadow: 0 0 30px rgba(var(--primary-rgb), 0.12);
 }
 
-/* ── Project List Cards (Admin) ── */
+/* ══════════════════════════════════════════════════════════════
+   PROJECT LIST CARDS (Admin)
+   ══════════════════════════════════════════════════════════════ */
+
 .project-list-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 16px 20px;
   transition: all 0.25s ease;
   cursor: pointer;
 }
 
 .project-list-card:hover {
-  border-color: rgba(var(--primary-rgb), 0.4);
+  border-color: rgba(var(--primary-rgb), 0.30);
   background: var(--surface-hover);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.2),
-    0 0 32px rgba(var(--primary-rgb), 0.1);
+    0 0 32px rgba(var(--primary-rgb), 0.06);
 }
 
 .project-list-card.active {
   border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary), 0 4px 20px rgba(124, 58, 237, 0.15);
+  box-shadow:
+    0 0 0 1px var(--primary),
+    0 4px 20px rgba(var(--primary-rgb), 0.12);
 }
 
-/* ── Chat Input ── */
+/* ══════════════════════════════════════════════════════════════
+   CHAT INPUT
+   ══════════════════════════════════════════════════════════════ */
+
 .chat-input-container {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .chat-input-container:focus-within {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.15);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
 }
 
-/* ── File Row ── */
+/* ══════════════════════════════════════════════════════════════
+   FILE ROW
+   ══════════════════════════════════════════════════════════════ */
+
 .file-row {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 14px 18px;
   transition: all 0.2s ease;
 }
 
 .file-row:hover {
-  border-color: var(--border-light);
+  border-color: rgba(var(--primary-rgb), 0.20);
   background: var(--surface-hover);
 }
 
@@ -512,11 +634,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .file-list-item:hover {
-  background: rgba(var(--primary-rgb), 0.04);
-  box-shadow: inset 0 0 40px rgba(var(--primary-rgb), 0.06);
+  background: rgba(var(--primary-rgb), 0.03);
+  box-shadow: inset 0 0 40px rgba(var(--primary-rgb), 0.04);
 }
 
-/* ── Client Selector Sidebar ── */
+/* ══════════════════════════════════════════════════════════════
+   CLIENT SELECTOR SIDEBAR
+   ══════════════════════════════════════════════════════════════ */
+
 .client-selector-sidebar::-webkit-scrollbar {
   width: 4px;
 }
@@ -532,14 +657,134 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 @media (max-width: 768px) {
   .client-selector-sidebar {
-    width: 56px !important;
-    min-width: 56px !important;
+    width: 56px;
+    min-width: 56px;
   }
 }
 
-/* ════════════════════════════════════════
-   Theme Toggle Component Styles
-   ════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR — premium nav with glowing active indicator
+   ══════════════════════════════════════════════════════════════ */
+
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-nav-link:hover {
+  background: var(--surface-hover);
+  color: var(--color-text-primary);
+}
+
+.sidebar-nav-link.active {
+  background: rgba(var(--primary-rgb), 0.08);
+  color: var(--color-brand-text);
+  box-shadow: inset 3px 0 0 var(--color-brand);
+}
+
+.sidebar-nav-link.active::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-brand);
+  box-shadow: 0 0 12px rgba(var(--primary-rgb), 0.5);
+}
+
+.sidebar-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(var(--primary-rgb), 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-brand-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(var(--primary-rgb), 0.10);
+}
+
+.sidebar-section {
+  padding: 0 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NAVBAR — editorial glass nav
+   ══════════════════════════════════════════════════════════════ */
+
+.navbar-link {
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.navbar-link:hover {
+  color: var(--color-text-primary);
+}
+
+/* ── Mobile menu items ── */
+.navbar-mobile-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 12px;
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.navbar-mobile-link:hover {
+  color: var(--color-text-primary);
+  background: var(--surface-hover);
+}
+
+.navbar-cta-btn {
+  background: var(--color-brand);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-lg);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navbar-cta-btn:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.25);
+}
+
+.navbar-cta-btn-sm {
+  background: var(--color-brand);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  transition: background 0.2s ease;
+}
+
+.navbar-cta-btn-sm:hover {
+  background: var(--primary-hover);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   THEME TOGGLE
+   ══════════════════════════════════════════════════════════════ */
 
 .theme-toggle-btn {
   display: inline-flex;
@@ -565,14 +810,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   height: 28px;
   border-radius: 9999px;
   background: var(--toggle-track-bg);
-  border: 1.5px solid var(--border-light);
+  border: 1.5px solid var(--border);
   padding: 0 4px;
   transition:
     background 0.3s ease,
     border-color 0.3s ease;
 }
 
-/* Sliding thumb */
 .theme-toggle-thumb {
   position: absolute;
   top: 50%;
@@ -588,17 +832,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   z-index: 1;
 }
 
-/* Dark mode: thumb on the left */
-.theme-toggle-thumb[data-theme="dark"] {
-  left: 4px;
-}
+.theme-toggle-thumb[data-theme="dark"] { left: 4px; }
+.theme-toggle-thumb[data-theme="light"] { left: calc(100% - 24px); }
 
-/* Light mode: thumb on the right */
-.theme-toggle-thumb[data-theme="light"] {
-  left: calc(100% - 24px);
-}
-
-/* Icon base */
 .theme-icon {
   position: absolute;
   display: flex;
@@ -612,17 +848,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   pointer-events: none;
 }
 
-/* Moon icon — right side in track, only visible when dark mode */
-.theme-icon-moon {
-  right: 6px;
-}
+.theme-icon-moon { right: 6px; }
+.theme-icon-sun { left: 6px; }
 
-/* Sun icon — left side in track, only visible when light mode */
-.theme-icon-sun {
-  left: 6px;
-}
-
-/* In dark mode: show moon, hide sun */
 [data-theme="dark"] .theme-icon-moon {
   opacity: 1;
   transform: scale(1) rotate(0deg);
@@ -633,7 +861,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   transform: scale(0.5) rotate(-30deg);
 }
 
-/* In light mode: show sun, hide moon */
 [data-theme="light"] .theme-icon-moon {
   opacity: 0;
   transform: scale(0.5) rotate(30deg);
@@ -644,57 +871,189 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   transform: scale(1) rotate(0deg);
 }
 
-/* ── Typography scale (Section 5) ── */
-.text-page-title {
-  font-size: 22px;
-  font-weight: 500;
+/* ══════════════════════════════════════════════════════════════
+   TYPOGRAPHY SCALE — editorial ref: 2025
+   ══════════════════════════════════════════════════════════════ */
+
+.text-hero {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+
+.text-display {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.text-h2 {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 600;
   line-height: 1.25;
   color: var(--color-text-primary);
 }
 
+.text-page-title {
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
 .text-section-heading {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  font-weight: 600;
   line-height: 1.25;
   color: var(--color-text-primary);
 }
 
 .text-body {
-  font-size: 14px;
+  font-size: clamp(0.875rem, 1.2vw, 0.9375rem);
   font-weight: 400;
-  line-height: 1.7;
+  line-height: 1.65;
   color: var(--color-text-secondary);
 }
 
 .text-ui-label {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
+  line-height: 1.4;
   color: var(--color-text-primary);
 }
 
 .text-caption {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 400;
+  line-height: 1.4;
   color: var(--color-text-tertiary);
 }
 
 .text-table-header {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 0.6875rem;
+  font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
 
-/* ── Skeleton shimmer (Section 8) ── */
-@keyframes shimmer {
-  0% {
-    background-position: -400px 0;
-  }
-  100% {
-    background-position: 400px 0;
-  }
+.text-number {
+  font-size: clamp(1.25rem, 3.5vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-primary);
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PROJECT CARD — dashboard project overview card
+   ══════════════════════════════════════════════════════════════ */
+
+.project-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.project-card:hover {
+  border-color: var(--color-brand);
+  box-shadow: var(--shadow-sm);
+}
+
+.project-card-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.project-card-pct {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.project-card-track {
+  height: 6px;
+  background: var(--color-bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.project-card-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.project-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 0.625rem;
+  color: var(--color-text-tertiary);
+}
+
+/* ── Metric Strip — premium editorial stat cards ── */
+
+.metric-strip-item {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: clamp(10px, 2.5vw, 14px) clamp(12px, 3vw, 16px);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-strip-item:hover {
+  border-color: rgba(var(--primary-rgb), 0.15);
+  box-shadow: 0 0 0 1px rgba(var(--primary-rgb), 0.04);
+}
+
+.metric-strip-label {
+  font-size: clamp(9px, 2.5vw, 10px);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  line-height: 1.3;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.metric-strip-value {
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+.metric-strip-delta {
+  font-size: clamp(9px, 2.5vw, 11px);
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-strip-icon {
+  opacity: 0.35;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SKELETON SHIMMER
+   ══════════════════════════════════════════════════════════════ */
 
 .skeleton {
   background: linear-gradient(
@@ -708,27 +1067,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   border-radius: var(--radius-sm);
 }
 
-@keyframes toast-slide-up {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes toast-slide-down {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-}
+/* ══════════════════════════════════════════════════════════════
+   TOAST ANIMATIONS
+   ══════════════════════════════════════════════════════════════ */
 
 .animate-toast-slide-up {
   animation: toast-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -738,15 +1079,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   animation: toast-slide-down 0.3s ease-in forwards;
 }
 
-/* ── Form controls (Section 6) ── */
+/* ══════════════════════════════════════════════════════════════
+   FORM CONTROLS — premium inputs and buttons
+   ══════════════════════════════════════════════════════════════ */
+
 .input-field {
   height: 36px;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--color-bg-primary);
   font-size: 14px;
   color: var(--color-text-primary);
-  padding: 0 12px;
+  padding: 0 14px;
   width: 100%;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -754,7 +1098,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .input-field:focus {
   outline: none;
   border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.10);
 }
 
 .input-field::placeholder {
@@ -769,17 +1113,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: var(--color-brand);
   color: #fff;
   height: 36px;
-  padding: 0 16px;
+  padding: 0 18px;
   font-size: 14px;
   font-weight: 500;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #4338ca;
+  background: var(--primary-hover);
+  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.25);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -796,47 +1141,46 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
   height: 36px;
-  padding: 0 16px;
+  padding: 0 18px;
   font-size: 14px;
   font-weight: 500;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, border-color 0.2s ease;
 }
 
 .btn-ghost:hover:not(:disabled) {
   background: var(--color-bg-secondary);
+  border-color: var(--color-text-tertiary);
 }
 
 .btn-destructive {
   background: var(--color-danger-soft);
   color: var(--color-danger-text);
   height: 36px;
-  padding: 0 16px;
+  padding: 0 18px;
   font-size: 14px;
   font-weight: 500;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   border: none;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .btn-destructive:hover:not(:disabled) {
-  background: #fca5a5;
+  background: #FCA5A5;
 }
 
-/* ── Input Group (prefix addon pattern) ── */
-/*
-  Wraps an optional left-addon (symbol, dot, icon) and the actual input/select
-  in a flex row. The addon and field share the same border/background so they
-  look like one cohesive control, but are completely separate DOM nodes —
-  no absolute positioning, no padding tricks, zero overlap possible.
-*/
+/* ══════════════════════════════════════════════════════════════
+   INPUT GROUP — prefix addon pattern
+   ══════════════════════════════════════════════════════════════ */
+
 .input-group {
   display: flex;
   align-items: stretch;
   width: 100%;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--color-bg-primary);
   overflow: hidden;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -844,10 +1188,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .input-group:focus-within {
   border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.10);
 }
 
-/* Left addon cell — symbol, dot, icon etc. */
 .input-group-prefix {
   display: flex;
   align-items: center;
@@ -860,10 +1203,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   white-space: nowrap;
   user-select: none;
   flex-shrink: 0;
-  transition: border-color 0.15s ease;
 }
 
-/* The actual input / select inside the group — no border of its own */
 .input-group-field {
   flex: 1;
   min-width: 0;
@@ -874,14 +1215,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   font-size: 14px;
   color: var(--color-text-primary);
   padding: 0 12px;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .input-group-field::placeholder {
   color: var(--color-text-tertiary);
 }
 
-/* Wrapper for select + chevron inside an input-group */
 .input-group-select-wrap {
   position: relative;
   flex: 1;
@@ -891,12 +1231,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .input-group-select-wrap .input-group-field {
   width: 100%;
-  padding-right: 32px; /* room for the chevron */
+  padding-right: 32px;
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
    RESPONSIVE — Safe-Area Variables
-   ════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════ */
+
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
@@ -904,10 +1245,20 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   --safe-left: env(safe-area-inset-left, 0px);
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
+   CURSOR — hidden on pointer-fine devices (custom cursor visible)
+   ══════════════════════════════════════════════════════════════ */
+
+@media (pointer: fine) and (hover: hover) {
+  body, a, button, input, select, textarea, [role="button"], .cursor-pointer, * {
+    cursor: none !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
    RESPONSIVE — Touch Targets (global)
-   All interactive elements must be at least 44px tall on touch screens
-   ════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════ */
+
 @media (pointer: coarse) {
   button,
   a,
@@ -918,7 +1269,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     min-height: 44px;
   }
 
-  /* Scrollbars are distracting / non-functional on touch — hide them */
   ::-webkit-scrollbar {
     display: none;
   }
@@ -928,92 +1278,85 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   }
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
    RESPONSIVE — Tablet (≤1024px)
-   ════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════ */
+
 @media (max-width: 1024px) {
-  /* Dashboard glow card grid: allow 2-col on tablet */
   .dashboard-glow-card {
     padding: 20px;
   }
 
-  /* Metric strip: keep 2-col with adjusted padding */
   .metric-strip-item {
     padding: 12px 14px;
   }
 
-  /* Admin panel sidebar collapses earlier on tablet */
   .client-selector-sidebar {
-    width: 240px !important;
-    min-width: 240px !important;
+    width: 240px;
+    min-width: 240px;
+  }
+
+  .glass-card {
+    border-radius: var(--radius-lg);
   }
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
    RESPONSIVE — Mobile (≤640px)
-   ════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════ */
+
 @media (max-width: 640px) {
-  /* ── Hero: use dynamic viewport height so Android address bar doesn't clip */
   .hero-full-screen {
     min-height: 100dvh;
   }
 
-  /* ── Dashboard glow cards: tighter padding on phone */
   .dashboard-glow-card {
     padding: 16px;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
   }
 
-  /* ── Client group cards: full-width on mobile */
   .client-group-card {
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
   }
 
   .client-group-header {
     padding: 12px 16px;
   }
 
-  /* ── Project list cards: tighter padding */
   .project-list-card {
     padding: 12px 16px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
   }
 
-  /* ── Glass card: tighter border radius on small screens */
   .glass-card {
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
   }
 
-  /* ── File rows: compact */
   .file-row {
     padding: 10px 14px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
   }
 
-  /* ── Drop zone: reduce height */
   .drop-zone {
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
   }
 
-  /* ── Chat input: safe bottom padding for Android nav bar */
   .chat-input-container {
     padding-bottom: var(--safe-bottom);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
   }
 
-  /* ── Typography scale tweaks for small screens */
   .text-page-title {
-    font-size: 18px;
+    font-size: clamp(1rem, 4.5vw, 1.125rem);
   }
 
   .text-section-heading {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
-  /* ── Form controls: ensure full width and taller touch targets */
   .input-field {
     height: 44px;
-    font-size: 16px; /* prevents iOS/Android auto-zoom on focus */
+    font-size: 16px;
     border-radius: var(--radius-md);
   }
 
@@ -1024,32 +1367,31 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     font-size: 15px;
   }
 
-  /* ── Admin sidebar: collapse to icon-only on very small screens */
   .client-selector-sidebar {
-    width: 52px !important;
-    min-width: 52px !important;
+    width: 52px;
+    min-width: 52px;
   }
 
-  /* ── Input group: stack prefix nicely */
   .input-group {
     border-radius: var(--radius-md);
   }
 
   .input-group-field {
     height: 44px;
-    font-size: 16px; /* prevents zoom */
+    font-size: 16px;
   }
 }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════
    RESPONSIVE — Very small phones (≤400px)
-   ════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════ */
+
 @media (max-width: 400px) {
   .dashboard-glow-card {
     padding: 14px 12px;
   }
 
   .text-page-title {
-    font-size: 16px;
+    font-size: 1rem;
   }
 }

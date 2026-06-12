@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 
 const surfaceCardStyle = {
-  background: "#18181b",
-  border: "1px solid #2a2a2e",
+  background: "var(--color-bg-primary, #18181b)",
+  border: "1px solid var(--color-border, #2a2a2e)",
   borderRadius: "16px",
   padding: "24px",
 };
@@ -57,10 +57,7 @@ export default function DashboardError({
         <button
           type="button"
           onClick={() => router.refresh()}
-          className="inline-flex items-center gap-2 px-6 py-2.5 text-white rounded-xl font-medium text-sm transition cursor-pointer"
-          style={{ background: "#7c3aed" }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#6d28d9")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "#7c3aed")}
+          className="inline-flex items-center gap-2 px-6 py-2.5 text-white rounded-xl font-medium text-sm transition cursor-pointer bg-[#7c3aed] hover:bg-[#6d28d9]"
         >
           <RefreshIcon />
           Try Again

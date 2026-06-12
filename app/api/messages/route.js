@@ -49,12 +49,13 @@ export async function GET(request) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // Fetch all messages for this project
+    // Fetch messages for this project (bounded to 500)
     const { data: messages, error: messagesError } = await supabaseAdmin
       .from("lancerlink_messages")
       .select("*")
       .eq("project_id", project.id)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(500);
 
     if (messagesError) {
       console.error("[API /messages] Messages fetch error:", messagesError);

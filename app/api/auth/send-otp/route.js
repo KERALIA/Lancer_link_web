@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,20 @@ export async function POST(request) {
 
   if (!email || !isValidEmail(email)) {
     return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
+  }
+
+  // Rate limit: 5 OTP requests per email per minute
+  const rateCheck = checkRateLimit({ key: `otp:${email}`, max: 5, windowMs: 60_000 });
+  if (!rateCheck.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(rateCheck.resetInMs / 1000)),
+        },
+      },
+    );
   }
 
   if (!isSupabaseConfigured()) {

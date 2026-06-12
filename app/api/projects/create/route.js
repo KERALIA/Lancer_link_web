@@ -181,7 +181,38 @@ export async function POST(request) {
       return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, created: data }, { status: 201 });
+    // Send invitation email to the new client
+    let inviteResult = null;
+    try {
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
+
+      const { error: inviteError } =
+        await supabaseAdmin.auth.admin.inviteUserByEmail(emailVal, {
+          redirectTo: `${siteUrl.replace(/\/$/, "")}/auth/callback?type=invite`,
+        });
+
+      if (inviteError) {
+        console.warn(
+          "[API /projects/create] Invite email failed (project was created):",
+          inviteError,
+        );
+        inviteResult = { sent: false, error: inviteError.message };
+      } else {
+        inviteResult = { sent: true };
+      }
+    } catch (inviteErr) {
+      console.warn(
+        "[API /projects/create] Invite email threw (project was created):",
+        inviteErr,
+      );
+      inviteResult = { sent: false, error: "Unexpected error sending invite" };
+    }
+
+    return NextResponse.json(
+      { success: true, created: data, invite: inviteResult },
+      { status: 201 },
+    );
   } catch (err) {
     console.error("[API /projects/create] Unexpected error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

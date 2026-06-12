@@ -1,6 +1,6 @@
 const surfaceCardStyle = {
-  background: "#18181b",
-  border: "1px solid #2a2a2e",
+  background: "var(--color-bg-primary, #18181b)",
+  border: "1px solid var(--color-border, #2a2a2e)",
   borderRadius: "16px",
   padding: "24px",
 };

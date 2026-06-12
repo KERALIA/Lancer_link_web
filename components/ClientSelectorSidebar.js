@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 
 // ── Avatar with initials ──
 function ClientAvatar({ email }) {
@@ -122,7 +122,7 @@ export default function ClientSelectorSidebar({ selectedEmail, onSelect }) {
   }, [selectedEmail, onSelect]);
 
   useEffect(() => {
-    fetchClients();
+    startTransition(() => { fetchClients(); });
   }, [fetchClients]);
 
   const filtered = clients.filter((c) => {

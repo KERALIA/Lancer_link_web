@@ -48,22 +48,14 @@ export default function NavBar() {
         {/* Desktop nav links + controls */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-text-secondary hover:text-text-primary transition text-sm"
-            >
+            <a key={link.href} href={link.href} className="navbar-link">
               {link.label}
             </a>
           ))}
 
-          {/* Theme toggle sits right before the CTA button */}
           <ThemeToggle />
 
-          <Link
-            href="/dashboard"
-            className="bg-primary hover:bg-primary-hover text-white text-sm font-medium px-4 py-2 rounded-lg transition"
-          >
+          <Link href="/dashboard" className="navbar-cta-btn">
             Client Portal
           </Link>
         </div>
@@ -71,10 +63,7 @@ export default function NavBar() {
         {/* Mobile: hamburger + portal button */}
         <div className="flex md:hidden items-center gap-3">
           <ThemeToggle />
-          <Link
-            href="/dashboard"
-            className="bg-primary hover:bg-primary-hover text-white text-sm font-medium px-3 py-2 rounded-lg transition"
-          >
+          <Link href="/dashboard" className="navbar-cta-btn-sm">
             Portal
           </Link>
           {/* Hamburger button */}
@@ -118,7 +107,7 @@ export default function NavBar() {
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center py-3 px-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-hover transition text-base font-medium"
+              className="navbar-mobile-link"
             >
               {link.label}
             </a>
