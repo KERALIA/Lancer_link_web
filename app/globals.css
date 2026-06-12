@@ -1250,7 +1250,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
    ══════════════════════════════════════════════════════════════ */
 
 @media (pointer: fine) and (hover: hover) {
-  body.custom-cursor-active, a, button, input, select, textarea, [role="button"], .cursor-pointer, * {
+  body.custom-cursor-active,
+  body.custom-cursor-active * {
     cursor: none !important;
   }
 }
