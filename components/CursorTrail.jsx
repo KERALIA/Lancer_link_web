@@ -126,6 +126,8 @@ export default function CursorTrail() {
       targetVisibility.set(1);
     };
 
+    document.body.classList.add('custom-cursor-active');
+
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("mouseover", handleMouseOver, true);
     window.addEventListener("mousedown", handleMouseDown, { passive: true });
@@ -134,6 +136,7 @@ export default function CursorTrail() {
     document.addEventListener("mouseenter", handleMouseEnter, { passive: true });
 
     return () => {
+      document.body.classList.remove('custom-cursor-active');
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseover", handleMouseOver, true);
       window.removeEventListener("mousedown", handleMouseDown);
