@@ -34,6 +34,7 @@ const ContactSchema = z.object({
  *  - Inserts into contact_messages table with ip_hash
  */
 export async function POST(request) {
+  try {
   // ── 1. Parse body ──────────────────────────────────────────────
   let body;
   try {
@@ -128,16 +129,32 @@ export async function POST(request) {
 
   if (dbError) {
     console.error(
-      "[POST /api/contact] Supabase error:",
-      dbError.message,
-      dbError.details,
-      dbError.hint
+      "[POST /api/contact] Supabase DB error:",
+      "code:", dbError.code,
+      "message:", dbError.message,
+      "details:", dbError.details,
+      "hint:", dbError.hint
     );
+
+    // Provide a more actionable error for common cases
+    let userMsg = "Failed to send message. Please try again later.";
+    if (dbError.code === "42P01") {
+      // relation does not exist — table not created in DB yet
+      userMsg = "The contact system is not fully set up yet. Please email the site owner directly.";
+    }
+
     return NextResponse.json(
-      { error: "Failed to send message. Please try again later." },
+      { error: userMsg },
       { status: 500 }
     );
   }
 
   return NextResponse.json({ success: true }, { status: 200 });
+  } catch (unexpectedErr) {
+    console.error("[POST /api/contact] Unexpected top-level error:", unexpectedErr);
+    return NextResponse.json(
+      { error: "An unexpected error occurred. Please try again later." },
+      { status: 500 }
+    );
+  }
 }

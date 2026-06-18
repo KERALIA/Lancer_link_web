@@ -19,6 +19,7 @@ export async function GET(request) {
 
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const type = requestUrl.searchParams.get("type");
   const origin = requestUrl.origin;
 
   if (!code) {
@@ -27,11 +28,7 @@ export async function GET(request) {
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    return NextResponse.redirect(`${origin}/dashboard`);
-  }
-
+  // ── Exchange the one-time code for a session first ──────────────
   const { error: exchangeError } =
     await supabase.auth.exchangeCodeForSession(code);
 
@@ -56,6 +53,13 @@ export async function GET(request) {
     return redirectResponse;
   }
 
+  // ── For recovery/invite flows, always go to setup-password ──────
+  // This MUST happen before any dashboard redirect so password-reset
+  // links never silently log the user in without setting a password.
+  if (type === "invite" || type === "recovery") {
+    return NextResponse.redirect(`${origin}/auth/setup-password`);
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -63,12 +67,6 @@ export async function GET(request) {
   const email = user?.email;
   if (!email) {
     return NextResponse.redirect(`${origin}/login?error=no_email`);
-  }
-
-  // Handle invite and password-recovery redirects
-  const type = requestUrl.searchParams.get("type");
-  if (type === "invite" || type === "recovery") {
-    return NextResponse.redirect(`${origin}/auth/setup-password`);
   }
 
   if (!isSupabaseConfigured()) {
