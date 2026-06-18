@@ -2,8 +2,23 @@ import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import DOMPurify from "isomorphic-dompurify";
 import { checkRateLimit } from "@/lib/rate-limit";
+
+// Force Node.js runtime (not Edge) so crypto and native modules work
+export const runtime = "nodejs";
+
+// ─── Simple HTML sanitiser (no JSDOM / DOMPurify needed) ─────────────────────
+// Strips all HTML tags and encodes the five dangerous HTML entities.
+// Input is already validated by Zod (trimmed, length-limited plain text).
+function sanitize(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/<[^>]*>/g, ""); // strip any remaining tags
+}
 
 // ─── Zod input validation schema ─────────────────────────────────────────────
 const ContactSchema = z.object({
@@ -29,13 +44,9 @@ const ContactSchema = z.object({
  *
  * Public endpoint for the contact form.
  *  - Zod schema validation (structure + types)
- *  - DOMPurify sanitization (XSS prevention)
+ *  - HTML entity sanitization (XSS prevention, no JSDOM dependency)
  *  - In-memory rate limiting (10 req / 60s per IP hash)
  *  - Inserts into contact_messages table with ip_hash
- *
- * NOTE: This route is intentionally standalone — it creates its own
- * Supabase client with native globalThis.fetch to avoid any undici/
- * module-load issues on Vercel serverless functions.
  */
 export async function POST(request) {
   try {
@@ -64,9 +75,9 @@ export async function POST(request) {
     const { name, email, message } = result.data;
 
     // ── 3. Sanitize against HTML/JS injection ──────────────────────
-    const cleanName = DOMPurify.sanitize(name).trim();
-    const cleanEmail = DOMPurify.sanitize(email).toLowerCase().trim();
-    const cleanMessage = DOMPurify.sanitize(message).trim();
+    const cleanName    = sanitize(name).trim();
+    const cleanEmail   = sanitize(email).toLowerCase().trim();
+    const cleanMessage = sanitize(message).trim();
 
     // ── 4. Hash IP for rate limiting ───────────────────────────────
     const ip =
@@ -94,7 +105,7 @@ export async function POST(request) {
     }
 
     // ── 6. Supabase credentials check ──────────────────────────────
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const supabaseUrl    = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
     if (
@@ -115,10 +126,10 @@ export async function POST(request) {
       );
     }
 
-    // ── 7. Standalone service-role client using native fetch ────────
-    // We do NOT use the shared getSupabaseAdmin() / supabaseFetch here
-    // because the undici dependency can cause Vercel serverless crashes.
-    // Native globalThis.fetch is always available on Vercel (Node 18+).
+    // ── 7. Standalone service-role client with native fetch ─────────
+    // Uses globalThis.fetch — always available on Vercel (Node 18+).
+    // Does NOT use the shared supabaseFetch/undici to avoid crashes
+    // on Vercel's serverless runtime.
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       global: { fetch: globalThis.fetch },
       auth: {
@@ -156,8 +167,8 @@ export async function POST(request) {
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (unexpectedErr) {
     console.error(
-      "[POST /api/contact] Unexpected top-level error:",
-      unexpectedErr?.message ?? unexpectedErr
+      "[POST /api/contact] Unexpected error:",
+      unexpectedErr?.message ?? String(unexpectedErr)
     );
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again later." },
