@@ -45,6 +45,8 @@ export async function proxy(request) {
     const publicPaths = [
       "/api/auth/send-otp",
       "/api/auth/logout",
+      "/api/auth/login-password",
+      "/api/auth/send-password-reset",
       "/api/contact"
     ];
     

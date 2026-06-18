@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { z } from "zod";
 import DOMPurify from "isomorphic-dompurify";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -108,13 +108,15 @@ export async function POST(request) {
     );
   }
 
-  // ── 7. Fresh service-role client ───────────────────────────────
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  // ── 7. Service-role client (uses undici fetch to avoid Next.js fetch patches) ──
+  const supabase = getSupabaseAdmin();
+  if (!supabase) {
+    console.error("[POST /api/contact] Failed to create admin client.");
+    return NextResponse.json(
+      { error: "Failed to send message. Please try again later." },
+      { status: 500 }
+    );
+  }
 
   // ── 8. Insert — include ip_hash to match existing table schema ──
   const { error: dbError } = await supabase.from("contact_messages").insert({
