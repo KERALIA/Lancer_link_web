@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import DOMPurify from "isomorphic-dompurify";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -32,126 +32,133 @@ const ContactSchema = z.object({
  *  - DOMPurify sanitization (XSS prevention)
  *  - In-memory rate limiting (10 req / 60s per IP hash)
  *  - Inserts into contact_messages table with ip_hash
+ *
+ * NOTE: This route is intentionally standalone — it creates its own
+ * Supabase client with native globalThis.fetch to avoid any undici/
+ * module-load issues on Vercel serverless functions.
  */
 export async function POST(request) {
   try {
-  // ── 1. Parse body ──────────────────────────────────────────────
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
-
-  // ── 2. Validate JSON schema structure ──────────────────────────
-  const result = ContactSchema.safeParse(body);
-
-  if (!result.success) {
-    const details = {};
-    result.error.issues.forEach((issue) => {
-      details[issue.path[0]] = issue.message;
-    });
-    return NextResponse.json(
-      { error: "Validation failed.", details },
-      { status: 422 }
-    );
-  }
-
-  const { name, email, message } = result.data;
-
-  // ── 3. Sanitize against HTML/JS injection ──────────────────────
-  const cleanName = DOMPurify.sanitize(name).trim();
-  const cleanEmail = DOMPurify.sanitize(email).toLowerCase().trim();
-  const cleanMessage = DOMPurify.sanitize(message).trim();
-
-  // ── 4. Hash IP for rate limiting ───────────────────────────────
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown";
-  const ipHash = createHash("sha256").update(ip).digest("hex").slice(0, 16);
-
-  // ── 5. Rate limit by IP — 10 submissions per minute ────────────
-  const rateCheck = checkRateLimit({
-    key: `contact:${ipHash}`,
-    max: 10,
-    windowMs: 60_000,
-  });
-
-  if (!rateCheck.ok) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil(rateCheck.resetInMs / 1000)),
-        },
-      }
-    );
-  }
-
-  // ── 6. Supabase credentials check ──────────────────────────────
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (
-    !supabaseUrl ||
-    !serviceRoleKey ||
-    supabaseUrl.includes("placeholder") ||
-    serviceRoleKey.includes("placeholder")
-  ) {
-    console.error("[POST /api/contact] Supabase env vars not configured.");
-    return NextResponse.json(
-      {
-        error:
-          "Database is not configured. Please contact the site owner directly.",
-      },
-      { status: 503 }
-    );
-  }
-
-  // ── 7. Service-role client (uses undici fetch to avoid Next.js fetch patches) ──
-  const supabase = getSupabaseAdmin();
-  if (!supabase) {
-    console.error("[POST /api/contact] Failed to create admin client.");
-    return NextResponse.json(
-      { error: "Failed to send message. Please try again later." },
-      { status: 500 }
-    );
-  }
-
-  // ── 8. Insert — include ip_hash to match existing table schema ──
-  const { error: dbError } = await supabase.from("contact_messages").insert({
-    name: cleanName,
-    email: cleanEmail,
-    message: cleanMessage,
-    ip_hash: ipHash,
-  });
-
-  if (dbError) {
-    console.error(
-      "[POST /api/contact] Supabase DB error:",
-      "code:", dbError.code,
-      "message:", dbError.message,
-      "details:", dbError.details,
-      "hint:", dbError.hint
-    );
-
-    // Provide a more actionable error for common cases
-    let userMsg = "Failed to send message. Please try again later.";
-    if (dbError.code === "42P01") {
-      // relation does not exist — table not created in DB yet
-      userMsg = "The contact system is not fully set up yet. Please email the site owner directly.";
+    // ── 1. Parse body ──────────────────────────────────────────────
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: userMsg },
-      { status: 500 }
-    );
-  }
+    // ── 2. Validate JSON schema structure ──────────────────────────
+    const result = ContactSchema.safeParse(body);
 
-  return NextResponse.json({ success: true }, { status: 200 });
+    if (!result.success) {
+      const details = {};
+      result.error.issues.forEach((issue) => {
+        details[issue.path[0]] = issue.message;
+      });
+      return NextResponse.json(
+        { error: "Validation failed.", details },
+        { status: 422 }
+      );
+    }
+
+    const { name, email, message } = result.data;
+
+    // ── 3. Sanitize against HTML/JS injection ──────────────────────
+    const cleanName = DOMPurify.sanitize(name).trim();
+    const cleanEmail = DOMPurify.sanitize(email).toLowerCase().trim();
+    const cleanMessage = DOMPurify.sanitize(message).trim();
+
+    // ── 4. Hash IP for rate limiting ───────────────────────────────
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown";
+    const ipHash = createHash("sha256").update(ip).digest("hex").slice(0, 16);
+
+    // ── 5. Rate limit by IP — 10 submissions per minute ────────────
+    const rateCheck = checkRateLimit({
+      key: `contact:${ipHash}`,
+      max: 10,
+      windowMs: 60_000,
+    });
+
+    if (!rateCheck.ok) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.ceil(rateCheck.resetInMs / 1000)),
+          },
+        }
+      );
+    }
+
+    // ── 6. Supabase credentials check ──────────────────────────────
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+    if (
+      !supabaseUrl ||
+      !serviceRoleKey ||
+      supabaseUrl.includes("placeholder") ||
+      supabaseUrl === "https://your-project.supabase.co" ||
+      serviceRoleKey.includes("placeholder") ||
+      serviceRoleKey === "your-service-role-key"
+    ) {
+      console.error("[POST /api/contact] Supabase env vars not configured.");
+      return NextResponse.json(
+        {
+          error:
+            "Database is not configured. Please contact the site owner directly.",
+        },
+        { status: 503 }
+      );
+    }
+
+    // ── 7. Standalone service-role client using native fetch ────────
+    // We do NOT use the shared getSupabaseAdmin() / supabaseFetch here
+    // because the undici dependency can cause Vercel serverless crashes.
+    // Native globalThis.fetch is always available on Vercel (Node 18+).
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      global: { fetch: globalThis.fetch },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+
+    // ── 8. Insert — include ip_hash to match existing table schema ──
+    const { error: dbError } = await supabase.from("contact_messages").insert({
+      name: cleanName,
+      email: cleanEmail,
+      message: cleanMessage,
+      ip_hash: ipHash,
+    });
+
+    if (dbError) {
+      console.error(
+        "[POST /api/contact] Supabase DB error:",
+        "code:", dbError.code,
+        "message:", dbError.message,
+        "details:", dbError.details,
+        "hint:", dbError.hint
+      );
+
+      let userMsg = "Failed to send message. Please try again later.";
+      if (dbError.code === "42P01") {
+        userMsg =
+          "The contact system is not fully set up yet. Please email the site owner directly.";
+      }
+
+      return NextResponse.json({ error: userMsg }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (unexpectedErr) {
-    console.error("[POST /api/contact] Unexpected top-level error:", unexpectedErr);
+    console.error(
+      "[POST /api/contact] Unexpected top-level error:",
+      unexpectedErr?.message ?? unexpectedErr
+    );
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again later." },
       { status: 500 }
