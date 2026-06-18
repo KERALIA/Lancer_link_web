@@ -5,6 +5,27 @@ import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
+/**
+ * Copy Supabase session cookies (sb-* prefix) from the cookieStore
+ * onto a NextResponse. Needed because Next.js 16 Route Handlers do not
+ * automatically merge cookies() writes into a separately created NextResponse.
+ */
+async function withSessionCookies(response) {
+  const cookieStore = await cookies();
+  for (const cookie of cookieStore.getAll()) {
+    if (cookie.name.startsWith("sb-")) {
+      response.cookies.set(cookie.name, cookie.value, {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+  }
+  return response;
+}
+
 export async function GET(request) {
   const purpose = request.headers.get("purpose");
   const secFetchDest = request.headers.get("sec-fetch-dest");
@@ -56,8 +77,11 @@ export async function GET(request) {
   // ── For recovery/invite flows, always go to setup-password ──────
   // This MUST happen before any dashboard redirect so password-reset
   // links never silently log the user in without setting a password.
+  // We explicitly copy session cookies onto the redirect response because
+  // Next.js 16 does not merge cookieStore writes into a new NextResponse.
   if (type === "invite" || type === "recovery") {
-    return NextResponse.redirect(`${origin}/auth/setup-password`);
+    const res = NextResponse.redirect(`${origin}/auth/setup-password`);
+    return withSessionCookies(res);
   }
 
   const {
@@ -89,5 +113,6 @@ export async function GET(request) {
     return NextResponse.redirect(`${origin}/access-denied`);
   }
 
-  return NextResponse.redirect(`${origin}/dashboard`);
+  const dashboardRes = NextResponse.redirect(`${origin}/dashboard`);
+  return withSessionCookies(dashboardRes);
 }

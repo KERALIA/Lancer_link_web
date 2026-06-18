@@ -22,20 +22,42 @@ export default function SetupPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // On mount, verify user has a session (came from invite/recovery link)
+  // Wait for the Supabase session to be established after the server-side
+  // auth callback sets cookies. We listen for PASSWORD_RECOVERY / SIGNED_IN
+  // instead of calling getUser() immediately, because Next.js 16 redirect
+  // responses need a moment for the browser to process the session cookies.
   useEffect(() => {
     if (!supabase) return;
-    async function checkSession() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+
+    let redirectTimer;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        clearTimeout(redirectTimer);
+        if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session?.user)) {
+          setLoading(false);
+        } else if (event === "SIGNED_OUT" || (event === "INITIAL_SESSION" && !session)) {
+          // No session after initial check — redirect to login
+          router.replace("/login");
+        }
+      }
+    );
+
+    // Fallback: if onAuthStateChange never fires a useful event within 5s,
+    // do a direct getUser() check and act on the result
+    redirectTimer = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.replace("/login");
-        return;
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
-    }
-    checkSession();
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(redirectTimer);
+    };
   }, [supabase, router]);
 
   async function handleSubmit(e) {
