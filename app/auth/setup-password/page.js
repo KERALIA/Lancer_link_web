@@ -22,41 +22,58 @@ export default function SetupPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Wait for the Supabase session to be established after the server-side
-  // auth callback sets cookies. We listen for PASSWORD_RECOVERY / SIGNED_IN
-  // instead of calling getUser() immediately, because Next.js 16 redirect
-  // responses need a moment for the browser to process the session cookies.
+  // Wait for the Supabase session to be established. We check using getUser()
+  // and listen for PASSWORD_RECOVERY / SIGNED_IN events to handle
+  // browser session state shifts gracefully.
   useEffect(() => {
     if (!supabase) return;
 
-    let redirectTimer;
+    let active = true;
+
+    async function checkSession() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!active) return;
+        if (user) {
+          setLoading(false);
+        } else {
+          // Give it a brief moment just in case cookie parsing is taking a tick
+          setTimeout(async () => {
+            if (!active) return;
+            const { data: { user: retryUser } } = await supabase.auth.getUser();
+            if (!retryUser) {
+              router.replace("/login");
+            } else {
+              setLoading(false);
+            }
+          }, 1000);
+        }
+      } catch (err) {
+        if (active) {
+          router.replace("/login");
+        }
+      }
+    }
+
+    checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        clearTimeout(redirectTimer);
-        if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session?.user)) {
+        if (!active) return;
+        if (
+          event === "PASSWORD_RECOVERY" ||
+          (event === "SIGNED_IN" && session?.user)
+        ) {
           setLoading(false);
-        } else if (event === "SIGNED_OUT" || (event === "INITIAL_SESSION" && !session)) {
-          // No session after initial check — redirect to login
+        } else if (event === "SIGNED_OUT") {
           router.replace("/login");
         }
       }
     );
 
-    // Fallback: if onAuthStateChange never fires a useful event within 5s,
-    // do a direct getUser() check and act on the result
-    redirectTimer = setTimeout(async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.replace("/login");
-      } else {
-        setLoading(false);
-      }
-    }, 5000);
-
     return () => {
+      active = false;
       subscription.unsubscribe();
-      clearTimeout(redirectTimer);
     };
   }, [supabase, router]);
 

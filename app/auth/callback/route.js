@@ -16,7 +16,7 @@ async function withSessionCookies(response) {
     if (cookie.name.startsWith("sb-")) {
       response.cookies.set(cookie.name, cookie.value, {
         path: "/",
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 60 * 60 * 24 * 7, // 7 days
